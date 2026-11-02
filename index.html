@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beylikten Devlete: Osmanlı Tarih Oyunu</title>
+  <link rel="stylesheet" href="src/stil.css">
+</head>
+<body>
+  <header id="ust-panel" class="gizli">
+    <div class="ust-ic">
+      <div id="ust-baslik">
+        <span id="ust-bolum"></span>
+        <span id="ust-sahne"></span>
+      </div>
+      <div id="gostergeler"></div>
+    </div>
+  </header>
+
+  <main id="sahne" aria-live="polite"></main>
+
+  <div id="modal-kaplama" class="gizli" role="dialog" aria-modal="true">
+    <div id="modal">
+      <h3 id="modal-baslik"></h3>
+      <div id="modal-govde"></div>
+      <div id="modal-butonlar"></div>
+    </div>
+  </div>
+
+  <!-- İçerik: önce content/unite10-2.json fetch ile denenir; dosya doğrudan açıldıysa (file://) bu yedek kullanılır. -->
+  <script src="content/unite10-2.js"></script>
+  <script src="src/durum.js"></script>
+  <script src="src/motor.js"></script>
+  <script src="src/sahneler.js"></script>
+  <script src="src/mini.js"></script>
+  <script src="src/harita.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,416 @@
+/* Mini oyunlar. Her biri (olay, icerik, onBitti) alır; tam ekran kaplama içinde adım adım ilerler;
+   bitince onBitti(sonuc) ile ürünleri döndürür.
+   Tipler: tez (sürükle-bırak kanıt tahtası), savas (birlik yerleştirme, animasyonlu sabit savaş, neden sıralama, farkı bul),
+           abluka (ikmal yollarını kesme bulmacası), esle (kavram eşleştirme), iskan (yerleştirme), dedektif (ipucu sıralama), okuma. */
+const MiniOyunlar = (() => {
+  const M = Motor;
+
+  /* ---------- Sürükle-bırak (işaretçi tabanlı; tıkla-seç/tıkla-bırak yedeği) ---------- */
+  const Surukle = {
+    secili: null,
+    kart(el, hedefSecici, onBirak) {
+      el.classList.add('surukle');
+      let bas = null, tasiyor = false, klon = null;
+      el.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return; bas = { x: e.clientX, y: e.clientY }; el.setPointerCapture(e.pointerId);
+      });
+      el.addEventListener('pointermove', e => {
+        if (!bas) return;
+        if (!tasiyor && Math.hypot(e.clientX - bas.x, e.clientY - bas.y) > 6) {
+          tasiyor = true; klon = el.cloneNode(true); klon.classList.add('surukle-klon'); document.body.append(klon); el.classList.add('tasiniyor');
+        }
+        if (tasiyor) { klon.style.left = e.clientX + 'px'; klon.style.top = e.clientY + 'px'; document.querySelectorAll(hedefSecici).forEach(h => h.classList.toggle('ustunde', h === Surukle.hedefBul(e, hedefSecici))); }
+      });
+      const bitir = e => {
+        if (!bas) return;
+        if (tasiyor) {
+          const h = Surukle.hedefBul(e, hedefSecici);
+          klon.remove(); klon = null; el.classList.remove('tasiniyor'); document.querySelectorAll(hedefSecici).forEach(x => x.classList.remove('ustunde'));
+          if (h) onBirak(h);
+        } else { // tıkla-seç
+          if (Surukle.secili === el) { el.classList.remove('secili'); Surukle.secili = null; }
+          else { document.querySelectorAll('.surukle.secili').forEach(x => x.classList.remove('secili')); el.classList.add('secili'); Surukle.secili = el; Surukle.secilenBirak = onBirak; }
+        }
+        bas = null; tasiyor = false;
+      };
+      el.addEventListener('pointerup', bitir); el.addEventListener('pointercancel', bitir);
+    },
+    hedef(el) {
+      el.classList.add('surukle-hedef');
+      el.addEventListener('click', () => { if (Surukle.secili && Surukle.secilenBirak) { const f = Surukle.secilenBirak; Surukle.secili.classList.remove('secili'); Surukle.secili = null; f(el); } });
+    },
+    hedefBul(e, secici) {
+      const liste = document.elementsFromPoint(e.clientX, e.clientY);
+      return liste.find(x => x.matches && x.matches(secici)) || liste.map(x => x.closest && x.closest(secici)).find(Boolean) || null;
+    }
+  };
+
+  /* ---------- Ortak ---------- */
+  function kaplamaAc(olay, adimlar) {
+    const kap = M.el('div', { class: 'mini-oyun' });
+    const adimKutu = M.el('div', { class: 'mini-adimlar' });
+    const govde = M.el('div', { class: 'mini-govde' });
+    kap.append(M.el('div', { class: 'mini-ust' }, M.el('div', null, M.el('span', { class: 'etiket' }, olay.yil), M.el('b', null, ' ' + olay.ad)), adimKutu), govde);
+    document.body.append(kap); document.body.classList.add('mini-acik');
+    let aktif = 0;
+    const adimCiz = () => { adimKutu.innerHTML = ''; adimlar.forEach((a, i) => adimKutu.append(M.el('span', { class: 'mini-adim' + (i === aktif ? ' aktif' : i < aktif ? ' gecti' : '') }, (i + 1) + '. ' + a))); };
+    adimCiz();
+    return { govde, adim(i) { aktif = i; adimCiz(); govde.innerHTML = ''; govde.scrollTop = 0; Surukle.secili = null; }, kapat() { kap.remove(); document.body.classList.remove('mini-acik'); } };
+  }
+  const soruKutusu = (q, cevapla) => {
+    const gb = M.el('div', { class: 'geri-bildirim gizli' });
+    const sec = M.el('div', { class: 'secenekler' });
+    q.secenekler.forEach((s, i) => sec.append(M.el('button', { class: 'secenek', onclick: (e) => { sec.querySelectorAll('.secenek').forEach(x => x.classList.remove('secildi')); e.currentTarget.classList.add('secildi'); gb.innerHTML = M.metin(s.geriBildirim); gb.classList.remove('gizli'); cevapla(i, s); } }, s.metin)));
+    return M.el('div', { class: 'soru' }, M.el('h3', null, q.metin), sec, gb);
+  };
+  const ileri = (metin, onclick, kosul) => M.el('div', { class: 'buton-satiri' }, M.el('button', { class: 'buyuk', onclick: () => { const e = kosul ? kosul() : null; if (e) { M.modal('Eksik', '<p>' + e + '</p>'); return; } onclick(); } }, metin));
+  const baslikKarti = (baslik, metin, ekstra) => M.el('div', { class: 'kart vurgulu' }, M.el('h2', null, baslik), M.el('div', { html: M.metin(metin) }), ekstra || null);
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (t, at, tx) => { const e = document.createElementNS(NS, t); Object.entries(at || {}).forEach(([k, v]) => { if (v !== null && v !== undefined) e.setAttribute(k, v); }); if (tx !== undefined) e.textContent = tx; return e; };
+  const bildirim = (govde, metin, sinif) => { const b = M.el('div', { class: 'mini-bildirim ' + (sinif || '') }, metin); govde.prepend(b); setTimeout(() => b.remove(), 4500); };
+
+  /* Son adım: kaynak sorusu (varsa) + tarih şeridi notu */
+  function sonAdim(K, olay, sonuc, adimNo, ekSoru) {
+    K.adim(adimNo);
+    let cevap = !ekSoru;
+    const ta = M.el('textarea', { placeholder: 'Bir-iki cümle...', oninput: e => sonuc.seritNotu = e.target.value });
+    K.govde.append(
+      ekSoru ? M.el('div', { class: 'kart' }, soruKutusu(ekSoru, (i, s) => { cevap = true; sonuc.kaynakCevabi = s.metin; })) : null,
+      M.el('div', { class: 'kart' }, M.el('h3', null, '✍️ ' + (olay.seritNotu || 'Bu olayı tarih şeridine bir cümleyle not et.')), M.el('p', { class: 'ipucu' }, 'Bu not açıklamalı tarih şeridinin parçası olacak.'), ta),
+      ileri('Bitir ✓', () => { K.kapat(); K.onBitti(sonuc); }, () => !cevap ? 'Önce soruyu cevapla.' : !(sonuc.seritNotu || '').trim() ? 'Tarih şeridine bir cümle yaz.' : null));
+  }
+
+  /* ---------- OKUMA (yedek) ---------- */
+  function okuma(olay, icerik, onBitti) {
+    const K = kaplamaAc(olay, ['Oku', 'Kaynak sorusu ve not']); K.onBitti = onBitti; const sonuc = {};
+    K.adim(0);
+    K.govde.append(baslikKarti(olay.ad, olay.ozet, (olay.kavramlar || []).map(k => M.kavramKutusu(k))), ileri('Devam ▶', () => sonAdim(K, olay, sonuc, 1, olay.kaynakSorusu)));
+  }
+
+  /* ---------- TEZ: sürükle-bırak kanıt tahtası + mühür + tez savunma ---------- */
+  function tez(olay, icerik, onBitti) {
+    const K = kaplamaAc(olay, ['Kanıt tahtası', 'Mühürle', 'Tezini savun']); K.onBitti = onBitti;
+    const tezler = icerik.tezler, guven = icerik.guvenilirlik, kartlar = olay.tanikler;
+    const isaretler = {}; const sonuc = { kartlar: {} };
+    const tezAd = (id) => (tezler.find(t => t.id === id) || {}).tarihci || '-';
+    const kartEl = (k, kucuk) => M.el('div', { class: 'tanik-kart surukle-kart' + (kucuk ? ' kucuk' : ''), 'data-id': k.id },
+      M.el('div', { class: 'kart-bas' }, M.el('span', { class: 'kart-avatar' }, k.avatar), M.el('b', null, k.ad), M.el('span', { class: 'etiket kurgu' }, k.tur === 'belge' ? 'belge' : 'sözlü')),
+      M.el('div', { class: 'kunye' }, k.kim + ' · ' + k.nerede + ' · ' + k.zaman),
+      M.el('p', { class: 'tanik-soz' }, '“' + k.metin + '”'),
+      M.el('p', { class: 'ipucu' }, '🎭 Çıkar: ' + k.cikar));
+
+    const tahtaCiz = () => {
+      K.adim(0);
+      const tepsi = M.el('div', { class: 'tepsi' });
+      const tahta = M.el('div', { class: 'kanit-tahtasi' });
+      const sayac = M.el('span', { class: 'ipucu' });
+      const yerlesenler = () => kartlar.filter(k => isaretler[k.id] && isaretler[k.id].tez).length;
+      const yenidenCiz = () => {
+        tepsi.innerHTML = ''; tahta.innerHTML = '';
+        kartlar.filter(k => !(isaretler[k.id] || {}).tez).forEach(k => { const el = kartEl(k); Surukle.kart(el, '.tahta-sutun', (h) => birak(k, h.dataset.tez)); tepsi.append(el); });
+        if (!tepsi.children.length) tepsi.append(M.el('p', { class: 'ipucu' }, 'Tüm tanıklıklar tahtada. Kartları sütunlar arasında taşıyabilirsin.'));
+        tezler.forEach(t => {
+          const sutun = M.el('div', { class: 'tahta-sutun', 'data-tez': t.id, style: 'border-top: 6px solid ' + t.renk }, M.el('h4', null, t.tarihci), M.el('p', { class: 'ipucu' }, t.kisa));
+          Surukle.hedef(sutun);
+          kartlar.filter(k => (isaretler[k.id] || {}).tez === t.id).forEach(k => {
+            const el = M.el('div', { class: 'tahta-kart surukle-kart' }, M.el('b', null, k.avatar + ' ' + k.ad), M.el('p', null, k.metin.slice(0, 80) + (k.metin.length > 80 ? '…' : '')),
+              M.el('div', { class: 'geri-bildirim' + (isaretler[k.id].gb ? '' : ' gizli'), html: isaretler[k.id].gb || '' }));
+            Surukle.kart(el, '.tahta-sutun', (h) => birak(k, h.dataset.tez));
+            sutun.append(el);
+          });
+          tahta.append(sutun);
+        });
+        sayac.textContent = yerlesenler() + '/' + kartlar.length + ' tanıklık yerleşti';
+      };
+      const birak = (k, tezId) => {
+        isaretler[k.id] = isaretler[k.id] || {};
+        isaretler[k.id].tez = tezId;
+        const uyuyor = k.tezler.includes(tezId);
+        isaretler[k.id].gb = (uyuyor ? '✅ ' : '🤔 ') + k.aciklama + (uyuyor ? '' : ' Bu kartı ' + tezAd(tezId) + ' sütununa koydun; gerekçen varsa kalabilir, istersen taşı.');
+        yenidenCiz();
+      };
+      yenidenCiz();
+      K.govde.append(baslikKarti('Kanıt tahtası', 'Tanıklık kartlarını, desteklediğini düşündüğün tarihçinin sütununa **sürükle** (ya da karta tıkla, sonra sütuna tıkla). Her kart bırakıldığında kısa bir tarihçi yorumu belirir. Kartları sonradan taşıyabilirsin.', sayac),
+        M.el('div', { class: 'tahta-duzen' }, M.el('div', { class: 'kart tepsi-karti' }, M.el('h3', null, '🗣️ Tanıklar'), tepsi), tahta),
+        ileri('Mühürlemeye geç ▶', muhurCiz, () => yerlesenler() < kartlar.length ? 'Önce tüm kartları tahtaya yerleştir.' : null));
+    };
+
+    const muhurCiz = () => {
+      K.adim(1);
+      const liste = M.el('div', { class: 'kanit-tahtasi' });
+      const ciz = () => {
+        liste.innerHTML = '';
+        tezler.forEach(t => {
+          const sutun = M.el('div', { class: 'tahta-sutun', style: 'border-top: 6px solid ' + t.renk }, M.el('h4', null, t.tarihci));
+          kartlar.filter(k => isaretler[k.id].tez === t.id).forEach(k => {
+            const muhurler = M.el('div', { class: 'muhurler' }, guven.map(g => M.el('button', { class: 'muhur ' + g.id + (isaretler[k.id].guven === g.id ? ' basili' : ''), title: g.aciklama, onclick: () => { isaretler[k.id].guven = g.id; ciz(); } }, g.ad)));
+            sutun.append(M.el('div', { class: 'tahta-kart ' + (isaretler[k.id].guven || '') }, M.el('b', null, k.avatar + ' ' + k.ad), M.el('p', null, k.metin.slice(0, 90) + '…'), M.el('p', { class: 'ipucu' }, '🎭 ' + k.cikar), muhurler));
+          });
+          liste.append(sutun);
+        });
+      };
+      ciz();
+      K.govde.append(baslikKarti('Mühürle', 'Her kartın altındaki mühürlerden birini bas: **Güvenilir** (olaya yakın, çıkarı az), **Şüpheli** (çıkar, abartı, sonradan aktarım), **Çelişkili** (başka bir kartla çelişiyor). Menkıbeler ve çıkarı olan tanıklar için dikkatli ol.'), liste,
+        M.el('div', { class: 'buton-satiri' }, M.el('button', { class: 'ikincil', onclick: tahtaCiz }, '◀ Tahtaya dön'), M.el('button', { class: 'buyuk', onclick: () => { if (kartlar.some(k => !isaretler[k.id].guven)) { M.modal('Eksik', '<p>Her karta bir mühür bas.</p>'); return; } savunCiz(); } }, 'Tezini savun ▶')));
+    };
+
+    const savunCiz = () => {
+      K.adim(2);
+      const s = { tez: null, destek: [], zayif: null, cevaplar: {} };
+      const gorusler = M.el('div', { class: 'gorus-kartlari' });
+      const gorusCiz = () => { gorusler.innerHTML = ''; icerik.gorusKartlari.forEach(g => { const t = tezler.find(x => x.id === g.id); const n = kartlar.filter(k => isaretler[k.id].tez === g.id).length; gorusler.append(M.el('button', { class: 'gorus-karti secilebilir' + (s.tez === g.id ? ' secildi' : ''), style: 'border-color:' + (s.tez === g.id ? t.renk : ''), onclick: () => { s.tez = g.id; gorusCiz(); } }, M.el('h4', null, g.tarihci), M.el('div', { class: 'alt' }, g.donem), M.el('p', null, g.ozet), M.el('span', { class: 'etiket' }, '📖 tahtada ' + n + ' kart'))); }); };
+      gorusCiz();
+      const kartListesi = M.el('div');
+      kartlar.forEach(k => {
+        const c = M.el('input', { type: 'checkbox', onchange: e => { s.destek = s.destek.filter(x => x !== k.id); if (e.target.checked) s.destek.push(k.id); } });
+        const r = M.el('input', { type: 'radio', name: 'zayif', onchange: () => s.zayif = k.id });
+        kartListesi.append(M.el('div', { class: 'tanik-kart kucuk ' + (isaretler[k.id].guven || '') }, M.el('div', { class: 'kunye' }, k.avatar + ' ' + k.ad + ' · sütun: ' + tezAd(isaretler[k.id].tez) + ' · mühür: ' + ((guven.find(g => g.id === isaretler[k.id].guven) || {}).ad || '')), M.el('p', { class: 'tanik-soz' }, '“' + k.metin + '”'), M.el('div', { class: 'defter-secimler' }, M.el('label', null, c, ' Destekliyor'), M.el('label', null, r, ' Zayıflatıyor'))));
+      });
+      const sorular = olay.tezSorulari.map(q => M.el('div', { class: 'soru' }, M.el('h3', null, q.metin), M.el('textarea', { oninput: e => s.cevaplar[q.id] = e.target.value })));
+      K.govde.append(baslikKarti('Tezini savun', 'Bir görüş seç, onu destekleyen en az iki kart ve zayıflatan bir kart işaretle, gerekçeni yaz.'),
+        M.el('div', { class: 'kart' }, M.el('h3', null, '1. Görüş'), gorusler), M.el('div', { class: 'kart' }, M.el('h3', null, '2. Kanıtlar'), kartListesi), M.el('div', { class: 'kart' }, M.el('h3', null, '3. Gerekçe'), sorular),
+        ileri('Bitir ✓', () => {
+          kartlar.forEach(k => sonuc.kartlar[k.ad] = tezAd(isaretler[k.id].tez) + ' / ' + ((guven.find(g => g.id === isaretler[k.id].guven) || {}).ad || '-'));
+          sonuc.tez = tezAd(s.tez); sonuc.destek = s.destek.map(id => kartlar.find(k => k.id === id).ad); sonuc.zayif = s.zayif ? kartlar.find(k => k.id === s.zayif).ad : '-';
+          sonuc.tezGerekce = s.cevaplar.tez_gerekce; sonuc.tezZayif = s.cevaplar.tez_zayif; sonuc.tezCurutme = s.cevaplar.tez_curutme;
+          K.kapat(); onBitti(sonuc);
+        }, () => !s.tez ? 'Bir görüş seç.' : s.destek.length < 2 ? 'En az iki destekleyen kart işaretle.' : !s.zayif ? 'Zayıflatan bir kart işaretle.' : olay.tezSorulari.some(q => !(s.cevaplar[q.id] || '').trim()) ? 'Üç gerekçe sorusunu da cevapla.' : null));
+    };
+    tahtaCiz();
+  }
+
+  /* ---------- SAVAŞ ---------- */
+  function savasHaritasi(olay) {
+    const svg = mk('svg', { viewBox: '0 0 600 260', class: 'savas-haritasi' });
+    const kiyi = olay.id === 'koyunhisar';
+    svg.append(mk('rect', { x: 0, y: 0, width: 600, height: 260, fill: kiyi ? '#7fb0d6' : '#cfdc9e' }));
+    svg.append(mk('path', { d: kiyi ? 'M0,120 C100,80 200,140 300,110 C400,80 500,130 600,100 L600,260 L0,260 Z' : 'M0,0 L600,0 L600,260 L0,260 Z', fill: '#dcd2b4' }));
+    if (!kiyi) { svg.append(mk('path', { d: 'M0,40 C150,20 300,60 600,30', class: 'tepe-cizgi' }), mk('path', { d: 'M0,60 C150,45 300,80 600,55', class: 'tepe-cizgi' })); }
+    [[60, 240, kiyi ? '← İstanbul / İzmit' : '← Düşman tarafı'], [540, 240, kiyi ? 'İznik →' : 'Osmanlı tarafı →']].forEach(([x, y, t]) => svg.append(mk('text', { x, y, 'text-anchor': 'middle', class: 'yer-etiket' }, t)));
+    return svg;
+  }
+  function savas(olay, icerik, onBitti) {
+    const K = kaplamaAc(olay, ['Düzen kur', 'Savaş (sabit)', 'Nedenleri sırala', 'Farkı bul', 'Tahmin ve not']); K.onBitti = onBitti;
+    const nedenler = olay.nedenler || icerik.nedenler; const sonuc = {}; const yerlesen = {};
+    const birlikler = [{ id: 'gozcu', ad: 'Gözcü', ikon: '👁️' }, { id: 'atli', ad: 'Atlı birlik', ikon: '🏇' }, { id: 'elci', ad: 'Elçi', ikon: '🤝' }];
+    const adim1 = () => {
+      K.adim(0);
+      const svg = savasHaritasi(olay);
+      const bilgi = M.el('div', { class: 'kart' }, M.el('h3', null, '🃏 Toplanan bilgi'), M.el('p', { class: 'ipucu' }, 'Henüz yok. Birlikleri bölgelere yerleştir.'));
+      const tepsi = M.el('div', { class: 'tepsi yatay' });
+      const sarici = M.el('div', { class: 'savas-sarici' }, svg);
+      const bolgeCiz = () => {
+        svg.querySelectorAll('.bolge').forEach(x => x.remove()); sarici.querySelectorAll('.bolge-hedef').forEach(x => x.remove());
+        olay.hazirliklar.forEach(h => {
+          const g = mk('g', { class: 'bolge' + (yerlesen[h.id] ? ' dolu' : '') });
+          g.append(mk('circle', { cx: h.x, cy: h.y, r: 22, class: 'bolge-daire' }), mk('text', { x: h.x, y: h.y + 7, 'text-anchor': 'middle', style: 'font-size:20px' }, yerlesen[h.id] ? birlikler.find(b => b.id === yerlesen[h.id]).ikon : h.ikon), mk('text', { x: h.x, y: h.y + 40, 'text-anchor': 'middle', class: 'yer-etiket' }, h.bolge));
+          svg.append(g);
+          // HTML hedef (sürükleme için) haritanın üstüne konumlanır
+          const hed = M.el('div', { class: 'bolge-hedef' + (yerlesen[h.id] ? ' dolu' : ''), style: 'left:' + (h.x / 600 * 100) + '%; top:' + (h.y / 260 * 100) + '%', 'data-id': h.id, title: h.ad + ': ' + h.metin });
+          Surukle.hedef(hed); sarici.append(hed);
+        });
+      };
+      const tepsiCiz = () => {
+        tepsi.innerHTML = '';
+        birlikler.filter(b => !Object.values(yerlesen).includes(b.id)).forEach(b => { const el = M.el('div', { class: 'birlik surukle-kart' }, M.el('span', { class: 'birlik-ikon' }, b.ikon), b.ad); Surukle.kart(el, '.bolge-hedef', (h) => birak(b, h.dataset.id)); tepsi.append(el); });
+        if (!tepsi.children.length) tepsi.append(M.el('span', { class: 'ipucu' }, 'Tüm birlikler yerleşti.'));
+      };
+      const birak = (b, bolgeId) => {
+        if (yerlesen[bolgeId]) { bildirim(K.govde, 'Bu bölgede zaten bir birlik var.'); return; }
+        yerlesen[bolgeId] = b.id;
+        const h = olay.hazirliklar.find(x => x.id === bolgeId); const n = nedenler.find(x => x.id === h.neden);
+        if (bilgi.querySelector('.ipucu')) bilgi.querySelector('.ipucu').remove();
+        bilgi.append(M.el('div', { class: 'tanik-kart kucuk' }, M.el('b', null, b.ikon + ' ' + b.ad + ' → ' + h.bolge), M.el('p', null, h.sonuc), M.el('span', { class: 'etiket' }, '🃏 Neden kartı: ' + n.ikon + ' ' + n.ad)));
+        bolgeCiz(); tepsiCiz();
+      };
+      bolgeCiz(); tepsiCiz();
+      K.govde.append(baslikKarti('Düzen kur', olay.gorev + '\n\n' + (olay.duzenGiris || 'Üç birliğini haritadaki bölgelere sürükle; her bölge sana savaşın bir nedenine dair bilgi verir.')),
+        M.el('div', { class: 'kart' }, M.el('h3', null, '⚔️ Birlikler'), tepsi, sarici), bilgi,
+        ileri('Savaşa git ▶', () => { sonuc.hazirliklar = Object.keys(yerlesen).map(id => olay.hazirliklar.find(h => h.id === id).ad); adim2(); }, () => Object.keys(yerlesen).length < 3 ? 'Üç birliği de yerleştir.' : null));
+    };
+    const adim2 = () => {
+      K.adim(1);
+      const svg = savasHaritasi(olay); const kaybeden = (olay.savasAnimasyon || {}).kazanan === 'dusman';
+      const metin = M.el('div', { class: 'savas-metin' });
+      const B = mk('g'), O = mk('g'); svg.append(B, O);
+      const bCiz = (x, y, op) => { B.innerHTML = ''; B.append(mk('circle', { cx: x, cy: y, r: 16, fill: '#7b8fd0', stroke: '#2b2118', 'stroke-width': 2, opacity: op }), mk('text', { x, y: y + 5, 'text-anchor': 'middle', class: 'pin-no' }, 'D'), mk('text', { x, y: y + 34, 'text-anchor': 'middle', class: 'yer-etiket' }, olay.id === 'koyunhisar' ? 'Bizans kuvveti' : olay.id === 'ankara' ? 'Timur ordusu' : 'Düşman ittifakı')); };
+      const oCiz = (x, y, op) => { O.innerHTML = ''; O.append(mk('circle', { cx: x, cy: y, r: 16, fill: '#c98a4b', stroke: '#2b2118', 'stroke-width': 2, opacity: op }), mk('text', { x, y: y + 5, 'text-anchor': 'middle', class: 'pin-no' }, 'O'), mk('text', { x, y: y + 34, 'text-anchor': 'middle', class: 'yer-etiket' }, 'Osmanlı')); };
+      const efekt = mk('g'); svg.append(efekt);
+      const adimlar = olay.savasAdimlari; const sure = 3.2; let bas = null, bitti = false;
+      const devam = M.el('button', { class: 'buyuk', disabled: 'disabled', onclick: adim3 }, 'Nedenleri sırala ▶');
+      const anim = (t) => {
+        if (!bas) bas = t; const g = (t - bas) / 1000; const toplam = adimlar.length * sure; const p = Math.min(1, g / toplam);
+        const i = Math.min(adimlar.length - 1, Math.floor(g / sure)); metin.innerHTML = '<p><b>' + (i + 1) + '/' + adimlar.length + '</b> ' + adimlar[i] + '</p>';
+        efekt.innerHTML = '';
+        const faz = p * adimlar.length; // 0..n
+        let bx = 80 + Math.min(1, faz) * 180, by = 160, ox = 480 - Math.min(1, faz) * 150, oy = 175, bop = 1, oop = 1;
+        if (faz > 1 && faz < 2.2) { const s = Math.sin(g * 20) * 4; bx += s; ox -= s; efekt.append(mk('text', { x: 300, y: 150, 'text-anchor': 'middle', style: 'font-size:34px' }, '⚔️')); }
+        if (faz >= 2.2) { const r = Math.min(1, (faz - 2.2) / 1.2); if (kaybeden) { ox += r * 200; oop = 1 - r * 0.6; } else { bx -= r * 220; bop = 1 - r * 0.6; } }
+        if (faz >= 3) { for (let k = 0; k < 4; k++) efekt.append(mk('text', { x: (kaybeden ? 120 : 380) + k * 45, y: 230, style: 'font-size:18px' }, kaybeden ? '🏰' : '⛺')); }
+        bCiz(bx, by, bop); oCiz(ox, oy, oop);
+        if (p < 1) requestAnimationFrame(anim); else if (!bitti) { bitti = true; devam.disabled = false; metin.innerHTML += '<p class="ipucu">Savaş bitti. Sonuç sabit; şimdi nedenlerini sen yorumlayacaksın.</p>'; }
+      };
+      K.govde.append(M.el('div', { class: 'sabit-uyari' }, '📌 Sabit olay: savaşın sonucunu değiştiremezsin. İzle.'), M.el('div', { class: 'kart' }, svg, metin), M.el('div', { class: 'buton-satiri' }, devam));
+      requestAnimationFrame(anim);
+    };
+    const adim3 = () => {
+      K.adim(2);
+      const toplanan = new Set(Object.keys(yerlesen).map(id => olay.hazirliklar.find(h => h.id === id).neden));
+      const sira = [null, null, null];
+      const tepsi = M.el('div', { class: 'tepsi yatay' }); const slotlar = M.el('div', { class: 'sira-slotlari' });
+      const ciz = () => {
+        tepsi.innerHTML = ''; slotlar.innerHTML = '';
+        nedenler.filter(n => !sira.includes(n.id)).forEach(n => { const el = M.el('div', { class: 'neden-kart surukle-kart' + (toplanan.has(n.id) ? ' toplanan' : '') }, M.el('span', { class: 'birlik-ikon' }, n.ikon), M.el('span', null, n.ad), toplanan.has(n.id) ? M.el('span', { class: 'etiket' }, '🃏 bilgi topladın') : null); Surukle.kart(el, '.sira-slot', (h) => { const i = +h.dataset.i; const eski = sira[i]; sira[i] = n.id; if (eski) { /* yer değiştir: eski kart tepsiye */ } ciz(); }); tepsi.append(el); });
+        sira.forEach((id, i) => { const slot = M.el('div', { class: 'sira-slot' + (id ? ' dolu' : ''), 'data-i': i }, M.el('b', null, (i + 1) + '.'), id ? M.el('span', null, nedenler.find(n => n.id === id).ikon + ' ' + nedenler.find(n => n.id === id).ad) : M.el('span', { class: 'ipucu' }, 'buraya sürükle'), id ? M.el('button', { class: 'kucuk ikincil', onclick: () => { sira[i] = null; ciz(); } }, '✕') : null); Surukle.hedef(slot); slotlar.append(slot); });
+      };
+      ciz();
+      const ta = M.el('textarea', { placeholder: 'Gerekçeni yaz...' });
+      K.govde.append(baslikKarti(olay.yorum.giris.split('.')[0] + '.', olay.yorum.giris, null),
+        M.el('div', { class: 'kart' }, M.el('h3', null, 'Neden kartları'), tepsi, M.el('h3', null, 'Önem sırası'), slotlar, M.el('h3', null, olay.yorum.gerekceSoru), ta),
+        ileri('Farkı bul ▶', () => { sonuc.nedenSira = sira.map(id => nedenler.find(x => x.id === id).ad).join(' > '); sonuc.nedenGerekce = ta.value; adim4(); }, () => sira.some(x => !x) ? 'Üç sırayı da doldur.' : !ta.value.trim() ? 'Gerekçeni yaz.' : null));
+    };
+    const adim4 = () => {
+      K.adim(3);
+      const F = olay.farklar; const sec = [null, null]; const gb = M.el('div', { class: 'geri-bildirim gizli' });
+      const sutun = (i, k) => M.el('div', { class: 'belge' }, M.el('span', { class: 'etiket dogrulama' }, k.etiket), M.el('h3', null, k.ad), M.el('div', { class: 'kunye' }, k.zaman + ' · ' + k.tur),
+        M.el('div', { class: 'cumleler' }, (i === 0 ? F.kaynak1 : F.kaynak2).map((c, j) => M.el('button', { class: 'cumle', onclick: (e) => { e.currentTarget.parentElement.querySelectorAll('.cumle').forEach(x => x.classList.remove('secildi')); e.currentTarget.classList.add('secildi'); sec[i] = j; kontrol(); } }, c))));
+      const kontrol = () => { if (sec[0] === null || sec[1] === null) return; const dogru = sec[0] === F.dogru[0] && sec[1] === F.dogru[1]; gb.innerHTML = (dogru ? '✅ Tam bu ikisi. ' : '🤔 Bu iki cümle de farklı bakışlar taşıyor; en keskin çelişki: "' + F.kaynak1[F.dogru[0]] + '" ile "' + F.kaynak2[F.dogru[1]] + '". ') + M.metin(F.aciklama); gb.classList.remove('gizli'); sonuc.kaynakKarsilastirma = { 'Seçtiğin çift': F.kaynak1[sec[0]] + ' | ' + F.kaynak2[sec[1]] }; };
+      const cevaplar = {};
+      K.govde.append(baslikKarti('Farkı bul', F.giris), M.el('div', { class: 'belgeler' }, sutun(0, olay.kaynaklar[0]), sutun(1, olay.kaynaklar[1])), gb,
+        M.el('div', { class: 'kart' }, (olay.kaynakSorulari || []).map(q => soruKutusu(q, (i, s) => cevaplar[q.metin] = s.metin))),
+        ileri('Tahmin ve nota geç ▶', () => { Object.assign(sonuc.kaynakKarsilastirma, cevaplar); adim5(); }, () => (sec[0] === null || sec[1] === null) ? 'Her kaynaktan bir cümle seç.' : (olay.kaynakSorulari || []).some(q => !cevaplar[q.metin]) ? 'Soruyu cevapla.' : null));
+    };
+    const adim5 = () => {
+      K.adim(4);
+      let tahmin = null; const gb = M.el('div', { class: 'geri-bildirim gizli' }); const sec = M.el('div', { class: 'secenekler' });
+      olay.tahmin.secenekler.forEach(s => sec.append(M.el('button', { class: 'secenek', onclick: (e) => { sec.querySelectorAll('.secenek').forEach(x => x.classList.remove('secildi')); e.currentTarget.classList.add('secildi'); tahmin = s.metin; gb.innerHTML = (s.dogru ? '✅ Tarihte böyle oldu. ' : '📖 Tarihte olan: ' + olay.tahmin.secenekler.find(x => x.dogru).metin + '. ') + M.metin(s.aciklama); gb.classList.remove('gizli'); } }, s.metin)));
+      const ta = M.el('textarea', { placeholder: 'Bir-iki cümle...' });
+      K.govde.append(M.el('div', { class: 'kart' }, M.el('h3', null, '🔮 ' + olay.tahmin.soru), sec, gb), M.el('div', { class: 'kart' }, M.el('h3', null, '✍️ ' + olay.seritNotu), ta),
+        ileri('Bitir ✓', () => { sonuc.tahmin = tahmin; sonuc.seritNotu = ta.value; K.kapat(); onBitti(sonuc); }, () => !tahmin ? 'Bir tahmin seç.' : !ta.value.trim() ? 'Tarih şeridine bir cümle yaz.' : null));
+    };
+    adim1();
+  }
+
+  /* ---------- ABLUKA: ikmal yollarını kes ---------- */
+  function abluka(olay, icerik, onBitti) {
+    const K = kaplamaAc(olay, ['Ablukayı kur', 'Sonuç', 'Kaynak sorusu ve not']); K.onBitti = onBitti;
+    const A = olay.abluka; const sonuc = {}; const yerlesen = {};
+    const adim1 = () => {
+      K.adim(0);
+      const svg = mk('svg', { viewBox: '0 0 600 300', class: 'savas-haritasi' });
+      const sarici = M.el('div', { class: 'savas-sarici' }, svg);
+      const cx = 300, cy = 150; const uclar = A.yollar.map((y, i) => { const a = -Math.PI / 2 + i * (2 * Math.PI / A.yollar.length); return { x: cx + Math.cos(a) * 125, y: cy + Math.sin(a) * 105, ad: y, i }; });
+      const ciz = () => {
+        svg.innerHTML = ''; sarici.querySelectorAll('.bolge-hedef').forEach(x => x.remove());
+        svg.append(mk('rect', { x: 0, y: 0, width: 600, height: 300, fill: '#dcd2b4' }));
+        uclar.forEach(u => { svg.append(mk('line', { x1: cx, y1: cy, x2: u.x, y2: u.y, class: 'ikmal-yolu' + (yerlesen[u.i] ? ' kesik' : '') }), mk('text', { x: u.x, y: u.y + (u.y > cy ? 34 : -26), 'text-anchor': 'middle', class: 'yer-etiket' }, u.ad)); if (u.i === 0) svg.append(mk('circle', { cx: u.x, cy: u.y - 2, r: 30, fill: '#7fb0d6', opacity: 0.5 })); });
+        svg.append(mk('circle', { cx, cy, r: 34, fill: '#c9bfa6', stroke: '#3b2416', 'stroke-width': 3 }), mk('text', { x: cx, y: cy + 8, 'text-anchor': 'middle', style: 'font-size:26px' }, '🏰'), mk('text', { x: cx, y: cy + 54, 'text-anchor': 'middle', class: 'yer-etiket' }, A.sehir));
+        uclar.forEach(u => { if (yerlesen[u.i]) svg.append(mk('text', { x: u.x, y: u.y + 8, 'text-anchor': 'middle', style: 'font-size:24px' }, '⛺')); const h = M.el('div', { class: 'bolge-hedef' + (yerlesen[u.i] ? ' dolu' : ''), style: 'left:' + (u.x / 6) + '%; top:' + (u.y / 3) + '%', 'data-i': u.i, title: u.ad }); Surukle.hedef(h); if (yerlesen[u.i]) h.append(M.el('button', { class: 'kaldir', title: 'Karargâhı kaldır', onclick: (e) => { e.stopPropagation(); delete yerlesen[u.i]; ciz(); tepsiCiz(); } }, '✕')); sarici.append(h); });
+      };
+      const tepsi = M.el('div', { class: 'tepsi yatay' });
+      const tepsiCiz = () => { tepsi.innerHTML = ''; for (let k = Object.keys(yerlesen).length; k < A.karargah; k++) { const el = M.el('div', { class: 'birlik surukle-kart' }, M.el('span', { class: 'birlik-ikon' }, '⛺'), 'Karargâh'); Surukle.kart(el, '.bolge-hedef', (h) => { const i = +h.dataset.i; if (yerlesen[i]) return; yerlesen[i] = true; ciz(); tepsiCiz(); }); tepsi.append(el); } if (!tepsi.children.length) tepsi.append(M.el('span', { class: 'ipucu' }, 'Karargâhlar yerleşti. Kaldırmak için karargâhın ✕ düğmesine bas.')); };
+      ciz(); tepsiCiz();
+      K.govde.append(baslikKarti(A.sehir + ' ablukası', A.giris, M.el('p', { class: 'ipucu' }, '💡 ' + A.ipucu)), M.el('div', { class: 'kart' }, M.el('h3', null, '⛺ Karargâhlar'), tepsi, sarici),
+        ileri('Ablukayı başlat ▶', adim2, () => Object.keys(yerlesen).length < A.karargah ? 'Dört karargâhı da yerleştir.' : null));
+    };
+    const adim2 = () => {
+      K.adim(1);
+      const acik = A.yollar.map((y, i) => i).filter(i => !yerlesen[i]);
+      const denizAcik = acik.includes(0);
+      sonuc.abluka = 'Açık bırakılan yol: ' + acik.map(i => A.yollar[i]).join(', ');
+      K.govde.append(baslikKarti('Abluka sonucu', (denizAcik
+        ? '**' + A.yollar[0] + '** açık kaldı: şehir su yoluyla beslenmeye devam etti; abluka yıllarca sürdü. Tarihte de ' + A.sehir + ' uzun bir ablukadan sonra, dışarıdan yardım kesilince teslim oldu.'
+        : 'Açık kalan yol: **' + A.yollar[acik[0]] + '**. Kara yolundan sızan az bir ikmal şehri uzun süre ayakta tutamadı; dışarıdan ordu gelmeyince ' + A.sehir + ' teslim oldu (' + olay.yil + ').') + '\n\n' + A.aciklama),
+        ileri('Kaynak sorusuna geç ▶', () => sonAdim(K, olay, sonuc, 2, olay.kaynakSorusu)));
+    };
+    adim1();
+  }
+
+  /* ---------- EŞLE: kavram kartlarını kutulara sürükle ---------- */
+  function esle(olay, icerik, onBitti) {
+    const E = olay.esle;
+    const K = kaplamaAc(olay, ['Eşleştir', 'Bağ kur', E.oyku ? 'Dijital öykü ve not' : 'Not']); K.onBitti = onBitti;
+    const sonuc = { eslestirme: {} }; const yerlesen = {};
+    const adim1 = () => {
+      K.adim(0);
+      const tepsi = M.el('div', { class: 'tepsi yatay' }); const kutular = M.el('div', { class: 'esle-kutular' }); const gb = M.el('div', { class: 'geri-bildirim gizli' });
+      const ciz = () => {
+        tepsi.innerHTML = ''; kutular.innerHTML = '';
+        E.kartlar.forEach((k, idx) => { if (yerlesen[idx]) return; const el = M.el('div', { class: 'neden-kart surukle-kart' }, k.ad); Surukle.kart(el, '.esle-kutu', (h) => birak(idx, h.dataset.id)); tepsi.append(el); });
+        if (!tepsi.children.length) tepsi.append(M.el('span', { class: 'ipucu' }, 'Tüm kartlar yerleşti.'));
+        E.hedefler.forEach(h => { const kutu = M.el('div', { class: 'esle-kutu', 'data-id': h.id }, M.el('h4', null, h.ikon + ' ' + h.ad)); Surukle.hedef(kutu); E.kartlar.forEach((k, idx) => { if (yerlesen[idx] === h.id) kutu.append(M.el('div', { class: 'tahta-kart ' + (k.hedef === h.id ? 'guvenilir' : 'supheli') }, k.ad, M.el('div', { class: 'kunye' }, k.aciklama), M.el('button', { class: 'kucuk ikincil', onclick: () => { delete yerlesen[idx]; ciz(); } }, '↩'))); }); kutular.append(kutu); });
+      };
+      const birak = (idx, hedefId) => { const k = E.kartlar[idx]; yerlesen[idx] = hedefId; gb.innerHTML = (k.hedef === hedefId ? '✅ ' : '🤔 Bu kart daha çok "' + E.hedefler.find(h => h.id === k.hedef).ad + '" kutusuna ait. ') + k.aciklama; gb.classList.remove('gizli'); sonuc.eslestirme[k.ad] = E.hedefler.find(h => h.id === hedefId).ad + (k.hedef === hedefId ? ' ✓' : ' (beklenen: ' + E.hedefler.find(h => h.id === k.hedef).ad + ')'); ciz(); };
+      ciz();
+      K.govde.append(baslikKarti(olay.ad, E.giris), M.el('div', { class: 'kart' }, M.el('h3', null, '🃏 Kartlar'), tepsi, gb), kutular,
+        ileri('Bağ kur ▶', adim2, () => Object.keys(yerlesen).length < E.kartlar.length ? 'Tüm kartları bir kutuya yerleştir.' : null));
+    };
+    const adim2 = () => {
+      K.adim(1); let cevap = false;
+      K.govde.append(baslikKarti('Bağ kur', olay.ozet, (olay.kavramlar || []).map(k => M.kavramKutusu(k))), M.el('div', { class: 'kart' }, soruKutusu(E.bag, (i, s) => { cevap = true; sonuc.kaynakCevabi = s.metin; })),
+        ileri('Devam ▶', adim3, () => cevap ? null : 'Önce bir seçenek işaretle.'));
+    };
+    const adim3 = () => {
+      if (!E.oyku) { sonAdim(K, olay, sonuc, 2, null); return; }
+      K.adim(2);
+      const sec = M.el('select', null, M.el('option', { value: '' }, 'Şahsiyet seç'), (olay.sahsiyetler || []).map(s => M.el('option', { value: s.ad }, s.ad)));
+      const notu = M.el('p', { class: 'ipucu' }); sec.addEventListener('change', () => { const s = (olay.sahsiyetler || []).find(x => x.ad === sec.value); notu.textContent = s ? s.not : ''; });
+      const ta = M.el('textarea', { placeholder: 'Üç cümle...' }); const ta2 = M.el('textarea', { placeholder: 'Bir-iki cümle...' });
+      K.govde.append(M.el('div', { class: 'kart' }, M.el('h3', null, '🎬 ' + E.oyku), sec, notu, ta), M.el('div', { class: 'kart' }, M.el('h3', null, '✍️ ' + olay.seritNotu), ta2),
+        ileri('Bitir ✓', () => { sonuc.dijitalOyku = sec.value + ': ' + ta.value; sonuc.seritNotu = ta2.value; K.kapat(); onBitti(sonuc); }, () => !sec.value ? 'Bir şahsiyet seç.' : !ta.value.trim() ? 'Öykü taslağını yaz.' : !ta2.value.trim() ? 'Tarih şeridine bir cümle yaz.' : null));
+    };
+    adim1();
+  }
+
+  /* ---------- İSKÂN: aileleri ve zaviyeleri köylere yerleştir ---------- */
+  function iskan(olay, icerik, onBitti) {
+    const I = olay.iskan; const K = kaplamaAc(olay, ['Yerleştir', 'Değerlendir', 'Not']); K.onBitti = onBitti;
+    const sonuc = {}; const yerlesen = {}; // parcaId -> yerId
+    const adim1 = () => {
+      K.adim(0);
+      const svg = mk('svg', { viewBox: '0 0 600 260', class: 'savas-haritasi' }); const sarici = M.el('div', { class: 'savas-sarici' }, svg);
+      const ciz = () => {
+        svg.innerHTML = ''; sarici.querySelectorAll('.bolge-hedef').forEach(x => x.remove());
+        svg.append(mk('rect', { x: 0, y: 0, width: 600, height: 260, fill: '#7fb0d6' }), mk('path', { d: 'M0,120 C80,60 160,40 260,30 C380,20 500,40 600,60 L600,260 L0,260 Z', fill: '#dcd2b4' }), mk('path', { d: 'M0,200 C100,170 200,230 300,205 C400,185 500,230 600,210 L600,260 L0,260 Z', fill: '#7fb0d6' }), mk('text', { x: 60, y: 60, class: 'deniz-etiket' }, 'Saros'), mk('text', { x: 480, y: 245, class: 'deniz-etiket' }, 'Marmara'));
+        I.yerler.forEach(y => { const sakin = Object.entries(yerlesen).filter(([p, yid]) => yid === y.id).map(([p]) => I.parcalar.find(x => x.id === p)); svg.append(mk('circle', { cx: y.x, cy: y.y, r: 20, fill: y.tip === 'yerli' ? '#d6cdb6' : '#e9dcb5', stroke: y.tip === 'yerli' ? '#7b8fd0' : '#8c7651', 'stroke-width': 3, 'stroke-dasharray': y.tip === 'bos' ? '5 3' : null }), mk('text', { x: y.x, y: y.y + 7, 'text-anchor': 'middle', style: 'font-size:18px' }, y.tip === 'yerli' ? '⛪' : '🏚️'), mk('text', { x: y.x, y: y.y + 38, 'text-anchor': 'middle', class: 'yer-etiket' }, y.ad)); sakin.forEach((p, i) => svg.append(mk('text', { x: y.x - 20 + i * 22, y: y.y - 24, 'text-anchor': 'middle', style: 'font-size:18px' }, p.ikon))); const h = M.el('div', { class: 'bolge-hedef', style: 'left:' + (y.x / 6) + '%; top:' + (y.y / 2.6) + '%', 'data-id': y.id, title: y.ad }); Surukle.hedef(h); sarici.append(h); });
+      };
+      const tepsi = M.el('div', { class: 'tepsi yatay' });
+      const tepsiCiz = () => { tepsi.innerHTML = ''; I.parcalar.filter(p => !yerlesen[p.id]).forEach(p => { const el = M.el('div', { class: 'birlik surukle-kart' }, M.el('span', { class: 'birlik-ikon' }, p.ikon), p.ad); Surukle.kart(el, '.bolge-hedef', (h) => { const yid = h.dataset.id; if (Object.values(yerlesen).filter(x => x === yid).length >= 2) { bildirim(K.govde, 'Bu köye en çok iki grup yerleşebilir.'); return; } yerlesen[p.id] = yid; ciz(); tepsiCiz(); }); tepsi.append(el); }); if (!tepsi.children.length) tepsi.append(M.el('span', { class: 'ipucu' }, 'Herkes yerleşti.')); };
+      ciz(); tepsiCiz();
+      K.govde.append(baslikKarti('İskân ve istimalet', I.giris, M.el('p', { class: 'ipucu' }, I.kurallar)), M.el('div', { class: 'kart' }, M.el('h3', null, '⛺ Gelenler'), tepsi, sarici),
+        ileri('Değerlendir ▶', adim2, () => Object.keys(yerlesen).length < I.parcalar.length ? 'Tüm grupları yerleştir.' : null));
+    };
+    const adim2 = () => {
+      K.adim(1); let cevap = false;
+      const satirlar = I.yerler.map(y => { const sakin = Object.entries(yerlesen).filter(([p, yid]) => yid === y.id).map(([p]) => I.parcalar.find(x => x.id === p)); if (!sakin.length) return M.el('li', null, M.el('b', null, y.ad + ': '), y.tip === 'bos' ? 'Boş kaldı; iskân olmadı.' : 'Yerli halk kendi hâlinde; bağ kurulmadı.'); return M.el('li', null, M.el('b', null, y.ad + ': '), sakin.map(p => I.degerlendirme[y.tip + '_' + p.tip]).join(' ')); });
+      sonuc.iskan = satirlar.map(li => li.textContent).join(' | ');
+      K.govde.append(baslikKarti('Yerleşimin sonucu', ''), M.el('div', { class: 'kart' }, M.el('ul', null, satirlar)), M.el('div', { class: 'kart' }, (olay.kavramlar || []).map(k => M.kavramKutusu(k)), soruKutusu(I.soru, (i, s) => { cevap = true; sonuc.kaynakCevabi = s.metin; })),
+        ileri('Nota geç ▶', () => sonAdim(K, olay, sonuc, 2, null), () => cevap ? null : 'Soruyu cevapla.'));
+    };
+    adim1();
+  }
+
+  /* ---------- DEDEKTİF: ipuçlarını güvenilirliğe göre sırala, tarihi tahmin et ---------- */
+  function dedektif(olay, icerik, onBitti) {
+    const D = olay.dedektif; const K = kaplamaAc(olay, ['İpuçlarını sırala', 'Tarihi tahmin et', 'Soru ve not']); K.onBitti = onBitti;
+    const sonuc = {}; const sira = D.ipuclari.map(() => null);
+    const adim1 = () => {
+      K.adim(0);
+      const tepsi = M.el('div', { class: 'tepsi' }); const slotlar = M.el('div', { class: 'sira-slotlari dikey' });
+      const ciz = () => { tepsi.innerHTML = ''; slotlar.innerHTML = ''; D.ipuclari.filter(ip => !sira.includes(ip.id)).forEach(ip => { const el = M.el('div', { class: 'tanik-kart kucuk surukle-kart' }, M.el('p', { class: 'tanik-soz' }, ip.metin)); Surukle.kart(el, '.sira-slot', (h) => { sira[+h.dataset.i] = ip.id; ciz(); }); tepsi.append(el); }); sira.forEach((id, i) => { const ip = D.ipuclari.find(x => x.id === id); const slot = M.el('div', { class: 'sira-slot' + (id ? ' dolu' : ''), 'data-i': i }, M.el('b', null, (i + 1) + '. ' + (i === 0 ? 'En güvenilir' : i === sira.length - 1 ? 'En az güvenilir' : '')), ip ? M.el('span', null, ip.metin.slice(0, 70) + '…') : M.el('span', { class: 'ipucu' }, 'buraya sürükle'), id ? M.el('button', { class: 'kucuk ikincil', onclick: () => { sira[i] = null; ciz(); } }, '✕') : null); Surukle.hedef(slot); slotlar.append(slot); }); };
+      ciz();
+      K.govde.append(baslikKarti('Tarih dedektifi', D.giris), M.el('div', { class: 'kart' }, M.el('h3', null, '🔎 İpuçları'), tepsi, M.el('h3', null, 'Güvenilirlik sırası'), slotlar),
+        ileri('Tarihi tahmin et ▶', () => { const ideal = D.ipuclari.slice().sort((a, b) => a.guven - b.guven).map(x => x.id); sonuc.ipucuSirasi = sira.map(id => D.ipuclari.find(x => x.id === id).metin.split(':')[0]).join(' > '); sonuc.ipucuDegerlendirme = sira[sira.length - 1] === 'menkibe' ? 'Menkıbeyi en sona koydun: doğru içgüdü.' : 'Menkıbe en az güvenilir ipucu olmalıydı.'; adim2(); }, () => sira.some(x => !x) ? 'Tüm ipuçlarını sırala.' : null));
+    };
+    const adim2 = () => {
+      K.adim(1);
+      const [a, b] = D.aralik; const deger = M.el('input', { type: 'range', min: a, max: b, value: Math.round((a + b) / 2), class: 'tarih-kaydirici' }); const etiket = M.el('b', { style: 'font-size:1.4rem' }, deger.value); deger.addEventListener('input', () => etiket.textContent = deger.value);
+      const gb = M.el('div', { class: 'geri-bildirim gizli' });
+      K.govde.append(baslikKarti('Tahminin', sonuc.ipucuDegerlendirme + ' Şimdi fetih yılını tahmin et.'), M.el('div', { class: 'kart' }, M.el('div', { class: 'kaydirici-satir' }, M.el('span', null, String(a)), deger, M.el('span', null, String(b))), M.el('p', { style: 'text-align:center' }, 'Tahmin: ', etiket), M.el('button', { onclick: () => { const v = +deger.value; const icinde = v >= D.kabul[0] && v <= D.kabul[1]; gb.innerHTML = (icinde ? '✅ Tarihçilerin önerdiği aralıktasın (' + D.kabul.join('-') + '). ' : '📖 Tarihçiler ' + D.kabul.join('-') + ' aralığını önerir. ') + M.metin(D.aciklama); gb.classList.remove('gizli'); sonuc.tahmin = v + (icinde ? ' (aralıkta)' : ' (aralık dışı)'); } }, 'Kontrol et'), gb),
+        ileri('Soruya geç ▶', () => sonAdim(K, olay, sonuc, 2, D.soru), () => sonuc.tahmin ? null : 'Önce tahminini kontrol et.'));
+    };
+    adim1();
+  }
+
+  return { okuma, tez, savas, abluka, esle, iskan, dedektif };
+})();
