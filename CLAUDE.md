@@ -28,7 +28,7 @@ Kaynak: https://mufredat.meb.gov.tr/Dosyalar/202582695425908-tarih.pdf ve https:
 
 1. **Tarih değişmez, öğrenci yorumlar.** Programda adı geçen olaylar sabit bir zaman çubuğunda sırayla açılır. Öğrenci olayın sonucunu değiştiremez; olaya hazırlanır, nedenlerini sıralar, kaynakları karşılaştırır, tahmin eder ve not düşer. Kaybetme/kazanma yoktur; yanlış seçim değil, farklı yorum vardır. Yanlış eşleştirme nazikçe yönlendirilir.
 2. **Ana mekân haritadır.** Tam ekran şematik Balkanlar-Anadolu haritası ve altında 1299-1453 zaman çubuğu. Her olay haritada bir işarettir; tamamlanan olaylar Osmanlı topraklarını büyütür. Olaylar sırayla açılır (bir önceki tamamlanmadan sonraki oynanmaz), tamamlananlar tekrar oynanabilir.
-3. **Her olay bir mini oyundur.** Olay türüne göre yedi mini oyun tipinden biri kullanılır (Bölüm 5). Tüm etkileşim **sürükle-bırak** üzerine kuruludur; dokunmatik ekranda da çalışır, alternatif olarak "karta tıkla, sonra hedefe tıkla".
+3. **Her olay bir mini oyundur.** Olay türüne göre sekiz mini oyun tipinden biri kullanılır (Bölüm 5). Tüm etkileşim **sürükle-bırak** üzerine kuruludur; dokunmatik ekranda da çalışır, alternatif olarak "karta tıkla, sonra hedefe tıkla".
 4. **Her mini oyun bir ürün üretir.** Tarih şeridi notu, kaynak analiz formu, tez savunması, dijital öykü taslağı gibi. Ürünler **Ürünlerim** panelinde birikir, kopyalanıp yazdırılabilir; öğretmene teslim bu yolla yapılır.
 5. **Kaynak sorgulama her olayda vardır.** Tanıklık kartlarına güvenilirlik mührü basma, iki kaynağın çelişen cümlelerinde "farkı bul", ipuçlarını güvenilirliğe göre sıralama. Öğrenci hangi kaynağa ne kadar güveneceğine kendisi karar verir.
 6. **Kurgu ile gerçek net ayrılır.** Tanıklar ve sözleri tamamen kurgusaldır; dönemin kaynaklarında anlatılan türden durumları temsil eder ve oyunda "kurgusal" olarak işaretlenir. Gerçek kişilere (Osman Bey, Orhan Bey, Şeyh Edebali, Davud-i Kayseri, Hacı Bayrâm-ı Velî vb.) uydurma söz atfedilmez. Her olayın sonunda **"Tarihte Ne Oldu"** kartı ve öğretmen doğrulama listesi gösterilir.
@@ -37,7 +37,7 @@ Kaynak: https://mufredat.meb.gov.tr/Dosyalar/202582695425908-tarih.pdf ve https:
 
 Eski tasarımdan **kaldırılan** öğeler: vakıf yerleşkesi, Refah/İlim/Güven/Adalet göstergeleri, bölüm başına karakter hikâyesi, güncellenen vakfiye belgesi, tur döngüsü. Bunlar geri istenirse öğretmen kararıyla ve bir olayın mini oyunu olarak eklenebilir.
 
-## 4. Olay listesi (10.2, 12 olay)
+## 4. Olay listesi (10.2, 13 olay)
 
 | # | Olay | Tarih | Kazanım | Mini oyun |
 |---|---|---|---|---|
@@ -50,9 +50,12 @@ Eski tasarımdan **kaldırılan** öğeler: vakıf yerleşkesi, Refah/İlim/Güv
 | 7 | Edirne'nin Fethi | ~1361-1369 | 10.2.2 | dedektif |
 | 8 | I. Kosova | 1389 | 10.2.2 | savas |
 | 9 | Devşirme ve kapıkulu | 14. yy sonu | 10.2.3 | esle |
-| 10 | Ankara Savaşı ve Fetret | 1402 | 10.2.2 | savas (yenilgi) |
-| 11 | II. Kosova | 1448 | 10.2.2 | savas |
-| 12 | İlim ve irfan | 1300-1453 | 10.2.5 | esle + dijital öykü |
+| 10 | Ankara Savaşı | 1402 | 10.2.2 | savas (yenilgi) |
+| 11 | Fetret Devri: taht mücadelesi | 1402-1413 | 10.2.2, 10.2.3 | taht |
+| 12 | II. Kosova | 1448 | 10.2.2 | savas |
+| 13 | İlim ve irfan | 1300-1453 | 10.2.5 | esle + dijital öykü |
+
+Fetret Devri, Kasım 2026'da öğrenci geri bildirimi üzerine öğretmen kararıyla ayrı olay yapıldı (önceden Ankara olayının içindeydi).
 
 Programın "Öğretme-Öğrenme Uygulamaları" bölümünde adıyla sayılan sekiz olay ve beş kazanımın tamamı kapsanır.
 
@@ -64,9 +67,12 @@ Programın "Öğretme-Öğrenme Uygulamaları" bölümünde adıyla sayılan sek
 - **esle**: kavram, aşama ya da şahsiyet kartlarını kutulara sürükle; yanlış kutuda nazik yönlendirme; sistemler arası bağ sorusu; ilim-irfanda bir şahsiyet için üç cümlelik dijital öykü taslağı.
 - **iskan**: Türkmen aile gruplarını ve derviş zaviyelerini Gelibolu çevresindeki boş ve yerli köylere yerleştir; iskân ile istimaletin farkını gör.
 - **dedektif**: dört ipucunu güvenilirliğe göre sırala, fetih yılını kaydırıcıda tahmin et, tartışmanın nedenini açıkla.
+- **taht** (Fetret, 10.2.2 + 10.2.3): beş yıl dilimi (1402 sonu, 1403, 1404-1410, 1411, 1413) boyunca şematik haritadaki üç bölgeye (Rumeli, Bursa, Amasya-Tokat) o yıl tutan şehzadenin rozetini sürükle, Kontrol et; yanlışsa tarihteki durum ve öğrencinin işareti birlikte gösterilir, sonraki yıl tarihteki durumdan başlar. Ardından devleti ayakta tutan güçleri dağılmayı hızlandıranlardan ayır (esle ile ortak `kutuAdimi`), kaynak sorusu (Bizans tarihçisi ile Osmanlı kroniği bakışı) ve şerit notu. Ürün: yıl yıl taht haritası + ayakta tutanlar + kaynak cevabı + şerit notu.
 - **okuma**: yedek tip; özet, kaynak sorusu, tarih şeridi notu. Yeni bir olay için mini oyun henüz yazılmadıysa bu tip kullanılır.
 
 Her olayın akışı: haritada işarete tıkla → sağ panelde özet, kazanım kodu, görev → **Oyna** → mini oyun (2-4 adım) → ürün kaydı → **Tarihte Ne Oldu** kartı → sonraki olay açılır.
+
+**Ortak kontroller (Kasım 2026, öğrenci geri bildirimiyle eklendi):** üst çubukta "✕ Haritaya dön" (onaylı; yarım oyun kaydedilmez), alt satırda "◀ Geri" ve tıklanabilir geçilen adım çipleri (geri dönülen adımda önceki seçim ve yazılar korunur), sürükle-bırak adımlarında "↶ Geri al" (son hamle). Savaş animasyonu durdurulabilir, aşama aşama ileri/geri alınabilir, baştan izlenebilir (boşluk, ← →); aşama başına 5 sn; modal açıkken bekler. Giriş ekranında arka planda ünite haritası ve olay sırasıyla büyüyen topraklar var (`prefers-reduced-motion` açıksa durağan). İlk girişte öğretici (rehber) açılır; bkz. `src/rehber.js`.
 
 ## 6. Dosya yapısı
 
@@ -75,6 +81,7 @@ Her olayın akışı: haritada işarete tıkla → sağ panelde özet, kazanım 
 - `src/harita.js`: harita kabuğu (SVG harita, zaman çubuğu, olay paneli, mini oyun başlatma, Tarihte Ne Oldu, Ürünlerim, yardım, tam ekran, yeni oyun).
 - `src/mini.js`: `MiniOyunlar` nesnesi; tip adı → `(olay, icerik, onBitti)` fonksiyonu. Ortak sürükle-bırak yardımcısı (`Surukle.kart`, `Surukle.hedef`) ve adımlı kaplama burada.
 - `src/motor.js`: `Motor` yardımcıları (`el`, `metin`, `modal`, `icerikYukle`, `icerik`, `durum`).
+- `src/rehber.js`: öğretici (`Rehber.goster(ad)`, `Rehber.yenidenBaslat()`). Üç tur: `harita` (ilk girişte), `mini` (ilk mini oyunda, sürükle-bırak gösterimiyle), `savas` (ilk savaş animasyonunda). Her tur bir kez gösterilir, `durum.bayraklar.rehber_<ad>` ile kaydedilir; ❓ penceresinden baştan açılır. Tur metinleri arayüz anlatımıdır, ünite içeriği değildir; bu yüzden JSON'da değil burada durur. Adımın hedefi yoksa o adım atlanır.
 - `src/durum.js`: `Durum.kaydet / yukle / sil` (localStorage, try/catch içinde; başarısız olursa oyun yine çalışır). İçindeki `yeni` fonksiyonu eski yapıya aittir, `main.js` kendi durum nesnesini kurar.
 - `src/sahneler.js`: eski sahne çiziciler; yalnızca `Sahneler` nesnesi ve bazı yardımcılar kullanılır.
 - `src/stil.css`: tüm stiller (harita, mini oyunlar, yazdırma, dar ekran kuralları).
@@ -92,8 +99,9 @@ Her olayın akışı: haritada işarete tıkla → sağ panelde özet, kazanım 
 Üst düzey: `unite`, `baslik`, `donem`, `giris` (ustYazi, baslik, aciklama, altNot), `harita`, `tezler`, `nedenler`, `olaylar`.
 
 - `harita.karalar`: basitleştirilmiş kıyı çizgileri (SVG path). Enlem-boylamdan doğrusal izdüşüm: x = (boylam-19)/26·1000, y = (46-enlem)/11·600. `harita.yerler`: id, ad, x, y. `harita.topraklar`: `acilis` (hangi olay tamamlanınca açılır), `nufuz` (kesikli nüfuz alanı). Şekiller yaklaşıktır.
+- Ayrıntılı harita (Kasım 2026): `harita.karalar` adaları da içerir (`ada: true`); `harita.goller` (ad, d); `harita.nehirler` ve `harita.daglar` (ad, `noktalar` [[x,y]...], `etiket` [x,y] ya da null); `harita.komsular` (ad, `tur`: devlet | beylik | latin, x, y, rx, ry, `etiket`, `yillar` [[bas, son], ...], isteğe bağlı `not`): **sıradaki (oynanacak) olayın yılı** aralıklardan birindeyse gösterilir; böylece Osmanlı topraklarıyla (tamamlanan olaylar) tutarlı kalır. Komşu alanları şematik elipslerdir, gerçek sınır değildir. `harita.dogrulama`: haritanın öğretmen doğrulama listesi (lejanttaki ℹ️ bağlantısı). Komşu alanları ve Osmanlı toprakları kara sınırıyla kırpılır. Bu veri enlem-boylam listelerinden aynı izdüşümle üretildi; elle eklerken de bu formülü kullan. Haritada sol altta lejant ve katman düğmeleri (nehir, dağ, komşular) vardır; tercih `durum.harita.katmanlar`'da saklanır.
 - Olay başına ortak alanlar: `id`, `yil`, `yilSayi` (zaman çubuğu), `kisaYil` (işaret etiketi), `ad`, `yer`, `pin` ([x, y]), `kazanim`, `ozet`, `gorev`, `miniOyun.tip`, `tarihte` (Tarihte Ne Oldu maddeleri), `dogrulama` (öğretmen kontrol listesi).
-- Tipe özel veriler **olayın kendi alanlarında** durur, `miniOyun` içinde değil: `tez` → `tanikler`, `tezSorulari`; `savas` → `hazirliklar`, `savasAdimlari`, `yorum`, `kaynaklar`, `farklar`, `kaynakSorulari`, `tahmin`, `seritNotu`, isteğe bağlı `nedenler` (yoksa üst düzey `nedenler` kullanılır); `abluka` → `abluka.yollar`, `karargah`, `kaynakSorusu`, `seritNotu`; `esle` → `esle.hedefler`, `esle.kartlar`, `esle.bag`, isteğe bağlı `esle.oyku`, `kavramlar`/`sahsiyetler`; `iskan` → `iskan.yerler`, `iskan.parcalar`, `iskan.degerlendirme`, `iskan.soru`; `dedektif` → `dedektif.ipuclari` (guven 1-3), `aralik`, `kabul`, `soru`; `okuma` → `kavramlar`, `kaynakSorusu`, `seritNotu`.
+- Tipe özel veriler **olayın kendi alanlarında** durur, `miniOyun` içinde değil: `tez` → `tanikler`, `tezSorulari`; `savas` → `hazirliklar`, `savasAdimlari`, `yorum`, `kaynaklar`, `farklar`, `kaynakSorulari`, `tahmin`, `seritNotu`, isteğe bağlı `nedenler` (yoksa üst düzey `nedenler` kullanılır); `abluka` → `abluka.yollar`, `karargah`, `kaynakSorusu`, `seritNotu`; `esle` → `esle.hedefler`, `esle.kartlar`, `esle.bag`, isteğe bağlı `esle.oyku`, `kavramlar`/`sahsiyetler`; `iskan` → `iskan.yerler`, `iskan.parcalar`, `iskan.degerlendirme`, `iskan.soru`; `dedektif` → `dedektif.ipuclari` (guven 1-3), `aralik`, `kabul`, `soru`; `taht` → `taht.sehzadeler` (id, ad, kisa, renk, not), `taht.bolgeler` (id, ad, d, x, y; 600x320 şematik), `taht.fazlar` (yil, baslik, metin, dogru {bolgeId: sehzadeId}, aciklama), `taht.kurumlar` (esle biçiminde), isteğe bağlı `taht.karalar`, `beylikler`, `denizler`, `yerler`, ayrıca `kaynakSorusu`, `seritNotu`; `okuma` → `kavramlar`, `kaynakSorusu`, `seritNotu`.
 
 Yeni bir ünite eklemek için: `content/uniteX-Y.json` yaz, `icerik-derle.ps1` çalıştır, `index.html` ve `main.js`'de dosya adı ile `ICERIK_` anahtarını değiştir (ileride ünite seçim ekranı eklenebilir), gerekirse `harita.karalar`ı genişlet.
 
@@ -118,7 +126,7 @@ Yeni bir ünite eklemek için: `content/uniteX-Y.json` yaz, `icerik-derle.ps1` �
 
 1. Önce bu dosyayı oku, sonra kısa bir plan sun ve onay al.
 2. İçerik değişikliğinde yalnızca JSON'u düzenle, ardından `icerik-derle.ps1` çalıştır ya da kullanıcıya çalıştırmasını söyle.
-3. Yeni mini oyun tipi eklerken `MiniOyunlar` nesnesine `(olay, icerik, onBitti)` imzalı fonksiyon ekle, `harita.js`'deki tip açıklama sözlüğünü ve README'yi güncelle; `onBitti`'ye ürün nesnesini geçir.
+3. Yeni mini oyun tipi eklerken `MiniOyunlar` nesnesine `(olay, icerik, onBitti)` imzalı fonksiyon ekle, `harita.js`'deki tip açıklama sözlüğünü ve README'yi güncelle; `onBitti`'ye ürün nesnesini geçir. Ortak kontrollerin çalışması için: her adım fonksiyonu `K.adim(no, kendisi)` ile başlasın; ileri düğmesi `K.ileri(metin, onclick, kosul)` ile kurulsun (Geri'yi kendisi ekler); adımın durumu (yerleşimler, seçimler, yazılar) adım fonksiyonunun dışında tutulsun ki geri dönünce korunsun; sürükle-bırak adımlarında `geriAlma([durumNesneleri], ciz)` kullanılsın ve her hamleden önce `kaydet()` çağrılsın; animasyon/klavye dinleyicisi `K.temizlik(fn)` ile kaydedilsin.
 4. Her adımdan sonra çalışır durumda bırak; `index.html` çift tıklanarak açılır. Doğrulama için başsız Chrome ile ekran görüntüsü alınabilir.
 5. Tarihsel içerik yazarken emin olmadığın noktaları olayın `dogrulama` listesine ekle; öğretmen doğrulasın.
 6. Kapsam dışına çıkma (sonraki üniteler, hesap sistemi, öğretmen paneli, ses) ve tasarım kararlarını (Bölüm 3) değiştirme.
@@ -126,9 +134,10 @@ Yeni bir ünite eklemek için: `content/uniteX-Y.json` yaz, `icerik-derle.ps1` �
 ## 10. Bilinen eksikler ve sonraki adımlar
 
 - **Öğrenme kanıtlarından eksik olanlar:** öz değerlendirme formu, gözlem formu, bilgi görseli (infografik). Program bunları da istiyor; ünite sonunda ya da ilgili olayın ürününe eklenebilir.
-- **Ünite sonu ekranı yok:** 12/12 tamamlanınca toplu özet/teslim ekranı yok, yalnızca Ürünlerim paneli var.
+- **Ünite sonu ekranı yok:** 13/13 tamamlanınca toplu özet/teslim ekranı yok, yalnızca Ürünlerim paneli var.
 - **İçerik doğrulaması bekliyor:** her olayın `dogrulama` listesi (Koyunhisar yeri ve tarihi, dört tarihçinin özetleri, Bursa/Pelekanon/Edirne tarihleri, yeniçeri ocağı kuruluşu, Fetret'in bitişi, şahsiyet notları).
 - **Sınıf denemesi:** hangi mini oyun sıkıcı, hangisi işe yarıyor?
+- **Öğrenci geri bildirimi (Kasım 2026):** yapılanlar: giriş arka planı, geri/çıkış/geri al, savaşta durdurma, öğretici (rehber), Fetret Devri ayrı olay (taht), ayrıntılı ana harita (kıyılar, adalar, göller, nehirler, dağlar, yıla göre komşu devlet ve beylikler, lejant). Haritanın komşu yılları ve alanları `harita.dogrulama` listesinde öğretmen doğrulaması bekliyor.
 - **Sonraki üniteler:** 10.3 için `content/unite10-3.json`, harita genişletmesi (Orta Doğu, Orta Avrupa, Akdeniz), yeni mini oyun tipleri (antlaşma masası, kuşatma mühendisliği, muhacir yerleştirme).
 - **PWA ve çevrimdışı kurulum**, ses/müzik, mobil cila, öğretmen paneli: kapsam dışı, sonra.
 

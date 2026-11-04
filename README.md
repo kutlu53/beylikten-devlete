@@ -8,8 +8,11 @@ Türkiye Yüzyılı Maarif Modeli 10. sınıf Tarih dersi, 2. ünite (Beylikten 
 
 ## Yapı
 
-- **Harita kabuğu** (`src/harita.js`): şematik Balkanlar-Anadolu haritası, altta 1299-1453 zaman çubuğu, 12 olay işareti. Olaylar sırayla açılır; tamamlanan olaylar Osmanlı topraklarını haritada büyütür. Sağ panelde özet, kazanım kodu, görev ve **Oyna** düğmesi. **Ürünlerim** tüm ürünleri toplar (kopyala / yazdır).
+- **Harita kabuğu** (`src/harita.js`): şematik Balkanlar-Anadolu haritası (kıyılar, adalar, göller, nehirler, dağ sıraları; komşu devletler ve beylikler sıradaki olayın yılına göre görünür; sol altta lejant ve katman düğmeleri, ℹ️ ile öğretmen doğrulama listesi), altta 1299-1453 zaman çubuğu, 13 olay işareti. Olaylar sırayla açılır; tamamlanan olaylar Osmanlı topraklarını haritada büyütür. Sağ panelde özet, kazanım kodu, görev ve **Oyna** düğmesi. **Ürünlerim** tüm ürünleri toplar (kopyala / yazdır).
+- **Giriş ekranı** (`src/main.js`): arkada ünite haritası; Osmanlı toprakları olay sırasıyla belirir, sol altta o olayın yılı ve adı yazar. Bilgisayarda "hareket azaltma" (Windows: animasyon efektleri kapalı) açıksa topraklar baştan görünür, animasyon oynamaz.
+- **Rehber** (`src/rehber.js`): ilk girişte haritayı, ilk mini oyunda kontrolleri (sürükle-bırak gösterimiyle), ilk savaşta oynatma düğmelerini tanıtan adımlı tur. Her tur bir kez çıkar; **Atla** ya da Esc ile kapanır, ❓ penceresindeki **Rehberi baştan göster** ile yeniden açılır. Yeni oyun rehberi sıfırlar.
 - **Etkileşim**: tüm mini oyunlar sürükle-bırak üzerine kurulu (dokunmatik ekranda da çalışır; alternatif olarak karta tıkla, sonra hedefe tıkla).
+- **Mini oyun kontrolleri**: üst çubukta **✕ Haritaya dön** (onay sorar; yarım kalan oyun kaydedilmez). Alt satırda **◀ Geri** önceki adıma döner; geçilen adım çiplerine tıklamak da geri götürür. Geri dönülen adımda yerleştirmeler, seçimler ve yazılar korunur. Sürükle-bırak adımlarında **↶ Geri al** son hamleyi geri alır. Savaş animasyonunda **⏸ Durdur / ▶ Devam et**, **⏪ Önceki / Sonraki ⏩** aşama, **⏮ Baştan** düğmeleri vardır (klavye: boşluk, ← →); her aşama 5 saniye sürer, bir pencere açıkken savaş bekler.
 - **Mini oyunlar** (`src/mini.js`), olayın `miniOyun.tip` alanına göre:
   - `tez` (10.2.1): 12 kurgusal tanıklık kartını dört tarihçi sütununa sürükle (her bırakışta tarihçi yorumu belirir), her karta güvenilirlik mührü bas, bir tezi en az iki destekleyen ve bir zayıflatan kartla savun, üç gerekçe yaz. Ürün: kaynak analiz formu + tez.
   - `savas` (10.2.2; Koyunhisar, I. Kosova, Ankara, II. Kosova): üç birliği (gözcü, atlı, elçi) savaş haritasındaki bölgelere sürükle, her bölge bir "neden" kartı verir; sabit savaşı animasyonla izle (Ankara'da yenilgi); neden kartlarını önem sırasına sürükle ve gerekçele; iki kaynağın çelişen cümlelerini "farkı bul" ile seç; sonucu tahmin et, tarih şeridine not düş. Ürün: tarihsel bakış açısı formu + şerit notu.
@@ -17,15 +20,16 @@ Türkiye Yüzyılı Maarif Modeli 10. sınıf Tarih dersi, 2. ünite (Beylikten 
   - `esle` (devletleşme sistemleri, devşirme, ilim-irfan): kavram, aşama ya da şahsiyet kartlarını kutulara sürükle; yanlış kutuda nazik yönlendirme; ardından sistemler arası bağ sorusu; ilim-irfanda bir şahsiyet için üç cümlelik dijital öykü taslağı.
   - `iskan` (Rumeli'ye geçiş): Türkmen aile gruplarını ve derviş zaviyelerini Gelibolu çevresindeki boş ve yerli köylere yerleştir; iskân ile istimaletin farkını gör.
   - `dedektif` (Edirne): dört ipucunu güvenilirliğe göre sırala, fetih yılını kaydırıcıda tahmin et, tartışmanın nedenini açıkla.
+  - `taht` (Fetret Devri): beş yıl dilimi boyunca şematik haritadaki Rumeli, Bursa ve Amasya-Tokat bölgelerine o yıl tutan şehzadenin rozetini sürükle, Kontrol et (yanlışsa tarihteki durum gösterilir, sonraki yıl oradan başlar); devleti ayakta tutanları dağılmayı hızlandıranlardan ayır; kaynak sorusu ve şerit notu.
   - `okuma`: yedek tip; özet, kaynak sorusu, tarih şeridi notu.
-- **İçerik** (`content/unite10-2.json`): harita geometrisi, yerler, toprak katmanları, tezler, nedenler ve 12 olay. Öğretmen yalnızca bu dosyayı düzenler; kaydedince `araclar\icerik-derle.ps1` çalıştırılır (çift tıklayarak açılan sayfa için gerekli).
-- **Ortak motor**: `src/motor.js` (modal, metin, yardımcılar), `src/durum.js` (localStorage kaydı), `src/sahneler.js` (eski sahne çiziciler; yalnızca yardımcıları kullanılır).
+- **İçerik** (`content/unite10-2.json`): harita geometrisi, yerler, toprak katmanları, tezler, nedenler ve 13 olay. Öğretmen yalnızca bu dosyayı düzenler; kaydedince `araclar\icerik-derle.ps1` çalıştırılır (çift tıklayarak açılan sayfa için gerekli).
+- **Ortak motor**: `src/motor.js` (modal, metin, yardımcılar), `src/rehber.js` (öğretici), `src/durum.js` (localStorage kaydı), `src/sahneler.js` (eski sahne çiziciler; yalnızca yardımcıları kullanılır).
 
 Olay listesi ve sonraki ünitelerin planı: `docs/olay-listesi.md`.
 
 ## Olay listesi (10.2)
 
-1. 1299 Kuruluş: tarihçiler ne diyor? (tez) · 2. ~1302 Koyunhisar (savaş) · 3. 1326 Bursa (abluka) · 4. 1331 İznik (abluka) · 5. 1330'lar Devletleşme (eşle) · 6. 1352-54 Rumeli'ye geçiş (iskân) · 7. ~1361-69 Edirne (dedektif) · 8. 1389 I. Kosova (savaş) · 9. 14. yy sonu Devşirme (eşle) · 10. 1402 Ankara ve Fetret (savaş, yenilgi) · 11. 1448 II. Kosova (savaş) · 12. İlim ve irfan (eşle + dijital öykü).
+1. 1299 Kuruluş: tarihçiler ne diyor? (tez) · 2. ~1302 Koyunhisar (savaş) · 3. 1326 Bursa (abluka) · 4. 1331 İznik (abluka) · 5. 1330'lar Devletleşme (eşle) · 6. 1352-54 Rumeli'ye geçiş (iskân) · 7. ~1361-69 Edirne (dedektif) · 8. 1389 I. Kosova (savaş) · 9. 14. yy sonu Devşirme (eşle) · 10. 1402 Ankara (savaş, yenilgi) · 11. 1402-1413 Fetret Devri (taht) · 12. 1448 II. Kosova (savaş) · 13. İlim ve irfan (eşle + dijital öykü).
 
 Programın "Öğretme-Öğrenme Uygulamaları" bölümünde adıyla sayılan sekiz olay (Koyunhisar, İznik, Bursa, Rumeli'ye geçiş, Edirne, I. Kosova, Ankara, II. Kosova) ve beş kazanımın tamamı kapsanır.
 

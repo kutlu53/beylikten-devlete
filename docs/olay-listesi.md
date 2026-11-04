@@ -20,9 +20,10 @@ Anahtar kavramlar: devşirme sistemi, irfan, iskân, istimalet, kapıkulu, Rumel
 | 7 | Edirne'nin Fethi | ~1361-1369 | 10.2.2, 10.2.5 | Yeni başkent kurma; Rumeli Türklüğü |
 | 8 | I. Kosova Savaşı | 1389 | 10.2.2 | Savaş öncesi istihbarat ve ittifak kartları; kaynak karşılaştırma |
 | 9 | Devşirme ve kapıkulu ocağının kurulması | 14. yy sonu | 10.2.3 | Ocak yönetimi: devşirme seçimi, eğitim, sonuçlar |
-| 10 | Ankara Savaşı ve Fetret Devri | 1402 (-1413) | 10.2.2 | Yenilgi yönetimi: vakıf dağılan devlette nasıl ayakta kalır |
-| 11 | II. Kosova Savaşı | 1448 | 10.2.2 | Haçlı tehdidi; 1444 Varna bağlam olarak |
-| 12 | İlim ve irfan: Bursa, Edirne, Kütahya, Amasya, Konya; Şeyh Edebali, Davud-i Kayseri, Dursun Fakih, Emir Sultan, Hacı Bayrâm-ı Velî | 1300-1453 | 10.2.5 | Külliye kurma; âlim biyografisi "dijital öykü" |
+| 10 | Ankara Savaşı | 1402 | 10.2.2 | Yenilgi yönetimi: vakıf dağılan devlette nasıl ayakta kalır |
+| 11 | Fetret Devri: taht mücadelesi | 1402-1413 | 10.2.2, 10.2.3 | Yıl yıl taht haritası (şehzadeler ve bölgeler); devleti ayakta tutan kurumlar (Kasım 2026'da ayrı olay yapıldı) |
+| 12 | II. Kosova Savaşı | 1448 | 10.2.2 | Haçlı tehdidi; 1444 Varna bağlam olarak |
+| 13 | İlim ve irfan: Bursa, Edirne, Kütahya, Amasya, Konya; Şeyh Edebali, Davud-i Kayseri, Dursun Fakih, Emir Sultan, Hacı Bayrâm-ı Velî | 1300-1453 | 10.2.5 | Külliye kurma; âlim biyografisi "dijital öykü" |
 
 Programda ek araştırma konuları: Timur Devleti, Molla Hüsrev, Molla Gürani, Molla Fenari, Kadızade-i Rumi, Hocazade Muslihuddin.
 Sosyal yapılar (10.2.4): vakıflar, dervişler, aşiretler, akıncı uç beyleri, Gâziyân-ı Rum, Ahiyân-ı Rum, Abdalân-ı Rum, Bâciyân-ı Rum.

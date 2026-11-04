@@ -21,22 +21,48 @@
     if (secili >= olaylar.length) secili = olaylar.length - 1;
 
     /* ---------- SVG harita ---------- */
+    /* Katmanlar: deniz → kara → komşu alanları → Osmanlı toprakları → göller → dağlar → nehirler → etiketler → yerler → olay işaretleri.
+       Komşu devlet ve beylikler (H.komsular) sıradaki olayın yılına göre gösterilir (Osmanlı toprakları da tamamlanan olaylara göre
+       büyüdüğü için ikisi tutarlı kalır). Komşu alanları ve Osmanlı toprakları kara sınırıyla kırpılır, denize taşmaz. */
     const svg = mk('svg', { viewBox: '0 0 ' + H.genislik + ' ' + H.yukseklik, class: 'dunya-haritasi', preserveAspectRatio: 'xMidYMid slice' });
+    const katman = HD.katmanlar = Object.assign({ nehir: true, dag: true, komsu: true }, HD.katmanlar || {});
+    const komsuYili = () => HD.acik >= olaylar.length ? yillar.son : olaylar[HD.acik].yilSayi;
+    const yilda = (k, yil) => (k.yillar || []).some(([a, b]) => a <= yil && yil <= b);
+    const yuv = (p) => p.map(v => Math.round(v * 10) / 10).join(',');
+    // Catmull-Rom eğrisi: nehirleri yumuşak çizer
+    const egri = (n) => { let dd = 'M' + yuv(n[0]); for (let i = 0; i < n.length - 1; i++) { const p0 = n[i - 1] || n[i], p1 = n[i], p2 = n[i + 1], p3 = n[i + 2] || p2; dd += ' C' + yuv([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]) + ' ' + yuv([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]) + ' ' + yuv(p2); } return dd; };
+    // Dağ sırası: çizgi boyunca aralıklı "^" işaretleri
+    const sirt = (n, ara = 13) => { let dd = '', kalan = ara / 2; for (let i = 0; i < n.length - 1; i++) { const [x1, y1] = n[i], [x2, y2] = n[i + 1]; const L = Math.hypot(x2 - x1, y2 - y1); let t = kalan; for (; t <= L; t += ara) { const x = x1 + (x2 - x1) * t / L, y = y1 + (y2 - y1) * t / L; dd += 'M' + yuv([x - 4, y + 2.5]) + ' L' + yuv([x, y - 3]) + ' L' + yuv([x + 4, y + 2.5]) + ' '; } kalan = t - L; } return dd; };
     const haritaCiz = (yeniAcilan) => {
       svg.innerHTML = '';
-      svg.append(mk('rect', { x: 0, y: 0, width: H.genislik, height: H.yukseklik, fill: H.deniz }));
+      const kirp = mk('clipPath', { id: 'kara-kirp' }); H.karalar.forEach(k => kirp.append(mk('path', { d: k.d })));
+      svg.append(mk('defs', {}), mk('rect', { x: 0, y: 0, width: H.genislik, height: H.yukseklik, fill: H.deniz })); svg.querySelector('defs').append(kirp);
       // dalga deseni
       for (let i = 0; i < 14; i++) svg.append(mk('path', { d: 'M' + (i * 80 - 40) + ',' + (40 + (i % 3) * 170) + ' q20,-8 40,0 t40,0', class: 'dalga' }));
-      H.karalar.forEach(k => svg.append(mk('path', { d: k.d, fill: H.kara, stroke: '#9c8c66', 'stroke-width': 2, class: 'kara' })));
+      const kara = mk('g', { class: 'karalar' });
+      H.karalar.forEach(k => kara.append(mk('path', { d: k.d, fill: H.kara, stroke: '#9c8c66', 'stroke-width': k.ada ? 1.2 : 2, 'stroke-linejoin': 'round' })));
+      svg.append(kara);
+      const yil = komsuYili(); const komsular = katman.komsu ? (H.komsular || []).filter(k => yilda(k, yil)) : [];
+      const kg = mk('g', { 'clip-path': 'url(#kara-kirp)' });
+      komsular.forEach(k => { const e = mk('ellipse', { cx: k.x, cy: k.y, rx: k.rx, ry: k.ry, class: 'komsu-alan ' + k.tur }); e.append(mk('title', {}, k.ad + (k.not ? ' · ' + k.not : '') + ' (yaklaşık alan)')); kg.append(e); });
+      svg.append(kg);
       // Osmanlı toprakları (açılmış olaylara göre)
+      const tg = mk('g', { 'clip-path': 'url(#kara-kirp)' });
       H.topraklar.forEach(t => {
         const acilisIndex = olaylar.findIndex(o => o.id === t.acilis);
         if (acilisIndex < 0 || !(HD.tamam[t.acilis])) return;
         const p = mk('path', { d: t.d, fill: t.nufuz ? H.nufuz : H.osmanli, 'fill-opacity': t.nufuz ? 0.55 : 0.85, stroke: '#8a4b1f', 'stroke-width': 1.5, 'stroke-dasharray': t.nufuz ? '6 4' : null, class: 'toprak' + (yeniAcilan === t.acilis ? ' yeni' : '') });
         p.append(mk('title', {}, t.etiket || (t.nufuz ? 'Osmanlı nüfuz alanı' : 'Osmanlı toprağı')));
-        svg.append(p);
+        tg.append(p);
       });
+      svg.append(tg);
+      (H.goller || []).forEach(g => { const p = mk('path', { d: g.d, fill: H.deniz, class: 'gol' }); p.append(mk('title', {}, g.ad)); svg.append(p); });
+      if (katman.dag) (H.daglar || []).forEach(dg => { const p = mk('path', { d: sirt(dg.noktalar), class: 'dag' }); p.append(mk('title', {}, dg.ad)); svg.append(p); });
+      if (katman.nehir) (H.nehirler || []).forEach(r => { const p = mk('path', { d: egri(r.noktalar), class: 'nehir' }); p.append(mk('title', {}, r.ad)); svg.append(p); });
       H.denizEtiketleri.forEach(e => svg.append(mk('text', { x: e.x, y: e.y, class: 'deniz-etiket', 'text-anchor': 'middle' }, e.metin)));
+      if (katman.dag) (H.daglar || []).forEach(dg => dg.etiket && svg.append(mk('text', { x: dg.etiket[0], y: dg.etiket[1], class: 'dag-etiket', 'text-anchor': 'middle' }, dg.ad)));
+      if (katman.nehir) (H.nehirler || []).forEach(r => r.etiket && svg.append(mk('text', { x: r.etiket[0], y: r.etiket[1], class: 'nehir-etiket', 'text-anchor': 'middle' }, r.ad)));
+      komsular.forEach(k => k.etiket && svg.append(mk('text', { x: k.etiket[0], y: k.etiket[1], class: 'komsu-etiket ' + k.tur, 'text-anchor': 'middle' }, k.ad)));
       // Yerler
       H.yerler.forEach(y => {
         svg.append(mk('circle', { cx: y.x, cy: y.y, r: 3.5, fill: '#5a4a32' }));
@@ -78,6 +104,24 @@
       });
     };
 
+    /* ---------- Lejant ve katmanlar ---------- */
+    const lejant = M.el('div', { class: 'harita-lejant' + (HD.lejantKapali === false ? '' : ' kapali') });
+    const lejantCiz = () => {
+      lejant.innerHTML = '';
+      const kapali = lejant.classList.contains('kapali');
+      const ornek = (sinif) => M.el('span', { class: 'lejant-ornek ' + sinif });
+      const satir = (...cocuk) => M.el('div', { class: 'lejant-satir' }, ...cocuk);
+      const secim = (anahtar, ...cocuk) => { const c = M.el('input', { type: 'checkbox', onchange: (e) => { katman[anahtar] = e.target.checked; Durum.kaydet(d); haritaCiz(); } }); c.checked = !!katman[anahtar]; return M.el('label', { class: 'lejant-satir' }, c, ...cocuk); };
+      lejant.append(
+        M.el('button', { class: 'lejant-baslik', 'aria-expanded': kapali ? 'false' : 'true', onclick: () => { lejant.classList.toggle('kapali'); HD.lejantKapali = lejant.classList.contains('kapali'); Durum.kaydet(d); lejantCiz(); } }, '🗺️ Lejant ' + (kapali ? '▸' : '▾')),
+        M.el('div', { class: 'lejant-govde' },
+          satir(ornek('osmanli'), 'Osmanlı toprağı'), satir(ornek('nufuz'), 'Osmanlı nüfuz alanı'),
+          secim('komsu', M.el('span', null, 'Komşular (', M.el('b', null, String(komsuYili())), ' yılı)')),
+          M.el('div', { class: 'lejant-alt' }, satir(ornek('devlet'), 'Devlet'), satir(ornek('beylik'), 'Anadolu beyliği'), satir(ornek('latin'), 'Venedik, Ceneviz, Latin')),
+          secim('nehir', ornek('nehir'), 'Nehirler'), secim('dag', ornek('dag'), 'Dağlar'),
+          M.el('button', { class: 'lejant-not', onclick: () => M.modal('🗺️ Harita hakkında', '<p>Harita şematiktir. Komşu devletler ve beylikler, sıradaki olayın yılına (' + komsuYili() + ') göre gösterilir; Osmanlı toprakları tamamladığın olaylara göre büyür.</p><p class="ipucu">Öğretmen doğrulamalı:</p><ul>' + (H.dogrulama || []).map(x => '<li>' + M.metin(x).replace(/^<p>|<\/p>$/g, '') + '</li>').join('') + '</ul>') }, 'ℹ️ Sınırlar ve yıllar yaklaşıktır')));
+    };
+
     /* ---------- Olay paneli ---------- */
     const panel = M.el('aside', { class: 'olay-paneli' });
     const panelCiz = () => {
@@ -88,7 +132,7 @@
         M.el('h2', null, o.yil + ' · ' + o.ad),
         M.el('div', { class: 'olay-ozet', html: M.metin(o.ozet) }),
         o.gorev ? M.el('div', { class: 'hedef-kutusu' }, M.el('b', null, '🎮 Görev: '), o.gorev) : null,
-        M.el('p', { class: 'ipucu' }, 'Mini oyun: ' + ({ tez: 'Sürükle-bırak kanıt tahtası, mühürler ve tez savunma', savas: 'Birlik yerleştirme, sabit savaş animasyonu, neden sıralama, farkı bul', okuma: 'Oku, kaynak sorusunu cevapla, tarih şeridine not düş', abluka: 'İkmal yollarını kesme bulmacası', esle: 'Kavram kartlarını eşleştirme', iskan: 'Aileleri ve zaviyeleri yerleştirme', dedektif: 'İpuçlarını sırala, tarihi tahmin et' })[o.miniOyun.tip] || o.miniOyun.tip),
+        M.el('p', { class: 'ipucu' }, 'Mini oyun: ' + ({ tez: 'Sürükle-bırak kanıt tahtası, mühürler ve tez savunma', savas: 'Birlik yerleştirme, sabit savaş animasyonu, neden sıralama, farkı bul', okuma: 'Oku, kaynak sorusunu cevapla, tarih şeridine not düş', abluka: 'İkmal yollarını kesme bulmacası', esle: 'Kavram kartlarını eşleştirme', iskan: 'Aileleri ve zaviyeleri yerleştirme', dedektif: 'İpuçlarını sırala, tarihi tahmin et', taht: 'Taht mücadelesini yıl yıl haritada izle, devleti ayakta tutanları ayır' })[o.miniOyun.tip] || o.miniOyun.tip),
         M.el('div', { class: 'buton-satiri', style: 'justify-content:flex-start' },
           st === 'kilitli' ? M.el('button', { disabled: 'disabled' }, '🔒 Önce ' + (HD.acik + 1) + '. olayı tamamla')
             : M.el('button', { class: 'buyuk', onclick: () => oyna(secili) }, st === 'tamam' ? '🔁 Tekrar oyna' : '▶ Oyna'),
@@ -107,7 +151,7 @@
         HD.urunler[o.id] = Object.assign({ ad: o.ad, yil: o.yil, kazanim: o.kazanim }, sonuc);
         if (ilkKez && i === HD.acik) HD.acik = Math.min(olaylar.length, HD.acik + 1);
         Durum.kaydet(d);
-        haritaCiz(o.id); panelCiz(); zamanCiz(); ustCiz();
+        haritaCiz(o.id); panelCiz(); zamanCiz(); ustCiz(); lejantCiz();
         tarihteGoster(o, true);
       });
     };
@@ -130,7 +174,10 @@
         M.el('div', { class: 'harita-ilerleme' }, M.el('div', { class: 'cubuk' }, M.el('div', { style: 'width:' + (tamamSayi / olaylar.length * 100) + '%; background: var(--vurgu)' })), M.el('span', null, tamamSayi + '/' + olaylar.length + ' olay')),
         M.el('div', { class: 'harita-araclar' },
           M.el('button', { class: 'hud-buton', onclick: urunlerGoster, title: 'Ürünlerim (öğrenme kanıtları)' }, '📂 Ürünlerim'),
-          M.el('button', { class: 'hud-buton', onclick: () => M.modal('❓ Nasıl oynanır', '<ul class="ipucu-listesi"><li>Haritadaki işaretler olaylar; sırayla açılır.</li><li>İşarete tıkla, sağ panelde oku, <b>Oyna</b> ile mini oyuna gir.</li><li>Her mini oyunun sonunda bir ürün oluşur: tarih şeridi notu, kaynak analizi, tez. <b>Ürünlerim</b>’de birikir.</li><li>Tarih değişmez; senin kararların yorumunu şekillendirir.</li></ul>') }, '❓'),
+          M.el('button', { class: 'hud-buton', title: 'Nasıl oynanır, rehber', onclick: async () => {
+            const ok = await M.modal('❓ Nasıl oynanır', '<ul class="ipucu-listesi"><li>Haritadaki işaretler olaylar; sırayla açılır.</li><li>İşarete tıkla, sağ panelde oku, <b>Oyna</b> ile mini oyuna gir.</li><li>Kartları <b>sürükle-bırak</b> ya da önce karta, sonra hedefe <b>tıkla</b>. Yanlış hamleyi <b>↶ Geri al</b> geri alır.</li><li>Mini oyunda <b>◀ Geri</b> önceki adıma döner; <b>✕ Haritaya dön</b> oyundan çıkar (yarım oyun kaydedilmez).</li><li>Savaşı <b>⏸ Durdur</b> ile durdurup aşama aşama izleyebilirsin (boşluk, ← →).</li><li>Her mini oyunun sonunda bir ürün oluşur: tarih şeridi notu, kaynak analizi, tez. <b>Ürünlerim</b>’de birikir.</li><li>Tarih değişmez; senin kararların yorumunu şekillendirir.</li></ul>', [{ metin: '🧭 Rehberi baştan göster', deger: true }, { metin: 'Kapat', deger: false }]);
+            if (ok) Rehber.yenidenBaslat();
+          } }, '❓'),
           M.el('button', { class: 'hud-buton', onclick: () => { const el = document.documentElement; if (!document.fullscreenElement) (el.requestFullscreen ? el.requestFullscreen() : Promise.reject()).catch(() => {}); else document.exitFullscreen(); }, title: 'Tam ekran' }, '⛶'),
           M.el('button', { class: 'hud-buton', onclick: async () => { const ok = await M.modal('Baştan başla', '<p>Tüm ilerleme ve ürünler silinecek. Emin misin?</p>', [{ metin: 'Evet, sil', deger: true }, { metin: 'Vazgeç', deger: false }]); if (ok) { Durum.sil(); location.reload(); } }, title: 'Baştan başla' }, '🔄'))
       );
@@ -148,7 +195,7 @@
         Object.entries(s).forEach(([k, v]) => {
           if (['ad', 'yil', 'kazanim'].includes(k)) return;
           const deger = typeof v === 'string' ? v : Array.isArray(v) ? v.join(', ') : JSON.stringify(v);
-          const ad = ({ seritNotu: 'Tarih şeridi notu', kaynakCevabi: 'Kaynak sorusu', tez: 'Savunulan tez', nedenSira: 'Neden sıralaması', nedenGerekce: 'Gerekçe', tahmin: 'Tahmin', tezGerekce: 'Tez gerekçesi', tezZayif: 'Zayıf yön', tezCurutme: 'Çürütme', kaynakKarsilastirma: 'Kaynak karşılaştırma', hazirliklar: 'Hazırlıklar', kartlar: 'Kaynak analiz formu', destek: 'Destekleyen kartlar', zayif: 'Zayıflatan kart', abluka: 'Abluka kararı', iskan: 'İskân sonucu', eslestirme: 'Eşleştirme', dijitalOyku: 'Dijital öykü taslağı', ipucuSirasi: 'İpucu güvenilirlik sırası', ipucuDegerlendirme: 'Sıralama değerlendirmesi' })[k] || k;
+          const ad = ({ seritNotu: 'Tarih şeridi notu', kaynakCevabi: 'Kaynak sorusu', tez: 'Savunulan tez', nedenSira: 'Neden sıralaması', nedenGerekce: 'Gerekçe', tahmin: 'Tahmin', tezGerekce: 'Tez gerekçesi', tezZayif: 'Zayıf yön', tezCurutme: 'Çürütme', kaynakKarsilastirma: 'Kaynak karşılaştırma', hazirliklar: 'Hazırlıklar', kartlar: 'Kaynak analiz formu', destek: 'Destekleyen kartlar', zayif: 'Zayıflatan kart', abluka: 'Abluka kararı', iskan: 'İskân sonucu', eslestirme: 'Eşleştirme', dijitalOyku: 'Dijital öykü taslağı', ipucuSirasi: 'İpucu güvenilirlik sırası', ipucuDegerlendirme: 'Sıralama değerlendirmesi', tahtFazlari: 'Taht mücadelesi (yıl yıl harita)', ayaktaTutanlar: 'Devleti ayakta tutanlar / dağıtanlar' })[k] || k;
           parcalar.push('<p><b>' + ad + ':</b> ' + (typeof v === 'object' && !Array.isArray(v) ? '<pre class="urun-pre">' + Object.entries(v).map(([a, b]) => a + ': ' + b).join('\n') + '</pre>' : deger) + '</p>');
           duz += '- ' + ad + ': ' + (typeof v === 'object' && !Array.isArray(v) ? '\n' + Object.entries(v).map(([a, b]) => '    ' + a + ': ' + b).join('\n') : deger) + '\n';
         });
@@ -164,7 +211,8 @@
     };
 
     kok.innerHTML = '';
-    kok.append(M.el('div', { class: 'harita-sahne' }, svg, ust, panel, zaman));
-    haritaCiz(); panelCiz(); zamanCiz(); ustCiz();
+    kok.append(M.el('div', { class: 'harita-sahne' }, svg, ust, panel, lejant, zaman));
+    haritaCiz(); panelCiz(); zamanCiz(); ustCiz(); lejantCiz();
+    Rehber.goster('harita');
   };
 })();
